@@ -1,0 +1,24 @@
+# ---- Angular / Node (frontend/) ----
+node_modules/
+dist/
+.angular/
+*.log
+npm-debug.log*
+
+# ---- .NET (backend/) ----
+bin/
+obj/
+*.user
+.vs/
+
+# ---- IDEs / Editores ----
+.vscode/
+.idea/
+
+# ---- Sistema operativo ----
+.DS_Store
+Thumbs.db
+
+# ---- Env / secretos ----
+.env
+*.env.local
