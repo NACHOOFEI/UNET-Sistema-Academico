@@ -1,0 +1,115 @@
+<div class="acceso">
+  <!-- Panel institucional. Se oculta en pantallas chicas para dar lugar al formulario. -->
+  <aside class="acceso__presentacion" aria-hidden="true">
+    <div class="marca">
+      <span class="marca__sigla">UNET</span>
+      <span class="marca__nombre">Universidad en Entorno Tecnologico</span>
+    </div>
+
+    <div class="presentacion__cuerpo">
+      <h2 class="presentacion__titulo">Sistema de Gestion Academica</h2>
+      <p class="presentacion__texto">
+        Inscripciones, cursadas, calificaciones y mesas de examen en un unico entorno
+        institucional.
+      </p>
+    </div>
+
+    <p class="presentacion__pie">Ciclo lectivo 2026</p>
+  </aside>
+
+  <main class="acceso__panel">
+    <div class="acceso__contenido">
+      <header class="acceso__encabezado">
+        <p class="acceso__volanta">Acceso al sistema</p>
+        <h1 class="acceso__titulo">Iniciar sesion</h1>
+        <p class="acceso__subtitulo">
+          Ingrese con el legajo y la contrasena que le asigno la institucion.
+        </p>
+      </header>
+
+      @if (errorIngreso(); as mensaje) {
+        <div class="aviso aviso--error" role="alert">
+          <span class="aviso__marca"></span>
+          <span>{{ mensaje }}</span>
+        </div>
+      }
+
+      <form class="formulario" [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+        <div class="campo">
+          <label class="campo__etiqueta" for="legajo">Legajo</label>
+          <input
+            id="legajo"
+            class="campo__control"
+            [class.campo__control--invalido]="campoInvalido(legajo)"
+            type="text"
+            inputmode="numeric"
+            autocomplete="username"
+            placeholder="Ej.: 10001"
+            formControlName="legajo"
+            [attr.aria-invalid]="campoInvalido(legajo)"
+            [attr.aria-describedby]="campoInvalido(legajo) ? 'error-legajo' : null"
+          />
+
+          @if (campoInvalido(legajo)) {
+            <p class="campo__error" id="error-legajo">
+              @if (legajo.hasError('required')) {
+                El legajo es obligatorio.
+              } @else if (legajo.hasError('pattern')) {
+                El legajo debe contener solo numeros.
+              }
+            </p>
+          }
+        </div>
+
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="password">Contrasena</label>
+            <button
+              class="boton boton--enlace"
+              type="button"
+              (click)="alternarPassword()"
+              [attr.aria-pressed]="mostrarPassword()"
+            >
+              {{ mostrarPassword() ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
+
+          <input
+            id="password"
+            class="campo__control"
+            [class.campo__control--invalido]="campoInvalido(password)"
+            [type]="mostrarPassword() ? 'text' : 'password'"
+            autocomplete="current-password"
+            placeholder="Ingrese su contrasena"
+            formControlName="password"
+            [attr.aria-invalid]="campoInvalido(password)"
+            [attr.aria-describedby]="campoInvalido(password) ? 'error-password' : null"
+          />
+
+          @if (campoInvalido(password)) {
+            <p class="campo__error" id="error-password">La contrasena es obligatoria.</p>
+          }
+        </div>
+
+        <button class="boton boton--primario boton--bloque" type="submit" [disabled]="enviando()">
+          {{ enviando() ? 'Verificando...' : 'Ingresar' }}
+        </button>
+
+        <!--
+          Pendiente de UNET-M1-CU02 (Recuperar contrasena).
+          Queda deshabilitado hasta que exista la ruta de recuperacion.
+        -->
+        <div class="formulario__pie">
+          <button class="boton boton--enlace" type="button" disabled>
+            Olvide mi contrasena
+          </button>
+          <span class="formulario__nota">Disponible proximamente</span>
+        </div>
+      </form>
+
+      <p class="acceso__ayuda">
+        Si no recuerda su legajo o no puede acceder, comuniquese con Bedelia.
+      </p>
+    </div>
+  </main>
+</div>

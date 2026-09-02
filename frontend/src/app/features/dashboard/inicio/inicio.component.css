@@ -1,0 +1,59 @@
+.inicio {
+  display: flex;
+  justify-content: center;
+  padding: var(--esp-8) var(--esp-4);
+}
+
+.inicio__tarjeta {
+  width: 100%;
+  max-width: 38rem;
+  padding: var(--esp-6);
+}
+
+.inicio__volanta {
+  font-size: var(--texto-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.inicio__titulo {
+  margin-top: var(--esp-2);
+  font-size: var(--texto-2xl);
+  font-weight: 600;
+  color: var(--gris-900);
+}
+
+.inicio__datos {
+  display: grid;
+  gap: var(--esp-4);
+  margin: var(--esp-6) 0 0;
+  padding: var(--esp-5);
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-md);
+  background-color: var(--gris-50);
+}
+
+.inicio__dato {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  font-size: var(--texto-sm);
+}
+
+.inicio__dato dt {
+  color: var(--gris-500);
+}
+
+.inicio__dato dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--gris-800);
+}
+
+.inicio__nota {
+  margin-top: var(--esp-5);
+  font-size: var(--texto-sm);
+  color: var(--gris-500);
+}
