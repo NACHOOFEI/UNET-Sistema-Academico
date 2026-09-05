@@ -10,6 +10,7 @@ bin/
 obj/
 *.user
 .vs/
+backend/Logs/
 
 # ---- IDEs / Editores ----
 .vscode/
@@ -22,3 +23,6 @@ Thumbs.db
 # ---- Env / secretos ----
 .env
 *.env.local
+
+# ---- Documentacion pesada (no versionar) ----
+UNET - Documentación General*.pdf
