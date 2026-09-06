@@ -1,9 +1,9 @@
-using Backend.Data.Dtos.Auth;
-using Backend.Services.Auth;
+using UNET.Data.Dtos.Auth;
+using UNET.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Backend.Controllers;
+namespace UNET.Controllers;
 
 [ApiController]
 [Route("api/auth")]

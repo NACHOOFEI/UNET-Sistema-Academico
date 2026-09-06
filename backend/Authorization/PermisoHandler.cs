@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 
-namespace Backend.Authorization;
+namespace UNET.Authorization;
 
 public class PermisoHandler : AuthorizationHandler<PermisoRequirement>
 {

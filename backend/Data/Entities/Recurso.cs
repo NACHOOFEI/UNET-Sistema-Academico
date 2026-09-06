@@ -1,6 +1,6 @@
-using Backend.Data.Enums;
+using UNET.Data.Enums;
 
-namespace Backend.Data.Entities;
+namespace UNET.Data.Entities;
 
 public class Recurso
 {

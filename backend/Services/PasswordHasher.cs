@@ -1,4 +1,4 @@
-namespace Backend.Services.Auth;
+namespace UNET.Services;
 
 public static class PasswordHasher
 {

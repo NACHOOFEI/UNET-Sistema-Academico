@@ -1,7 +1,12 @@
-using Backend.Data.Dtos.Rol;
-using Backend.Repository.Rol;
+using UNET.Data.Dtos.Rol;
+using UNET.Repositories;
 
-namespace Backend.Services.Rol;
+namespace UNET.Services;
+
+public interface IRolService
+{
+    Task<CreateRolResponseDto> CreateRolAsync(CreateRolRequestDto request);
+}
 
 public class RolService : IRolService
 {
@@ -12,18 +17,18 @@ public class RolService : IRolService
         _rolRepository = rolRepository;
     }
 
-    public async Task<CrearRolResponseDto> CrearRolAsync(CrearRolRequestDto request)
+    public async Task<CreateRolResponseDto> CreateRolAsync(CreateRolRequestDto request)
     {
         var nombre = request.Nombre.Trim();
 
         if (await _rolRepository.ExisteNombreAsync(nombre))
         {
-            return new CrearRolResponseDto(false, null, "rol-ya-existente");
+            return new CreateRolResponseDto(false, null, "rol-ya-existente");
         }
 
-        var permisosSobreRecurso = await _rolRepository.ObtenerPermisosSobreRecursoPorIdsAsync(request.PermisosSobreRecursoIds);
+        var permisosSobreRecurso = await _rolRepository.GetPermisosSobreRecursoByIdsAsync(request.PermisosSobreRecursoIds);
 
-        var rol = new Backend.Data.Entities.Rol
+        var rol = new UNET.Data.Entities.Rol
         {
             Id = Guid.NewGuid(),
             Nombre = nombre,
@@ -31,7 +36,7 @@ public class RolService : IRolService
             PermisosSobreRecurso = permisosSobreRecurso
         };
 
-        var creado = await _rolRepository.CrearAsync(rol);
+        var creado = await _rolRepository.CreateAsync(rol);
 
         var rolDto = new RolDto(
             creado.Id,
@@ -39,6 +44,6 @@ public class RolService : IRolService
             creado.Descripcion,
             creado.PermisosSobreRecurso.Select(p => p.Nombre).ToList());
 
-        return new CrearRolResponseDto(true, rolDto, null);
+        return new CreateRolResponseDto(true, rolDto, null);
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace Backend.Authorization;
+namespace UNET.Authorization;
 
 /// <summary>
 /// Genera policies al vuelo a partir del nombre de permiso pasado a [RequierePermiso],

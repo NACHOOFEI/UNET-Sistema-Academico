@@ -1,8 +1,15 @@
-using Backend.Data;
-using Backend.Data.Entities;
+using UNET.Data;
+using UNET.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend.Repository.Rol;
+namespace UNET.Repositories;
+
+public interface IRolRepository
+{
+    Task<bool> ExisteNombreAsync(string nombre);
+    Task<List<PermisoSobreRecurso>> GetPermisosSobreRecursoByIdsAsync(List<Guid> ids);
+    Task<UNET.Data.Entities.Rol> CreateAsync(UNET.Data.Entities.Rol rol);
+}
 
 public class RolRepository : IRolRepository
 {
@@ -16,10 +23,10 @@ public class RolRepository : IRolRepository
     public async Task<bool> ExisteNombreAsync(string nombre) =>
         await _context.Roles.AnyAsync(r => r.Nombre == nombre);
 
-    public async Task<List<PermisoSobreRecurso>> ObtenerPermisosSobreRecursoPorIdsAsync(List<Guid> ids) =>
+    public async Task<List<PermisoSobreRecurso>> GetPermisosSobreRecursoByIdsAsync(List<Guid> ids) =>
         await _context.PermisosSobreRecurso.Where(p => ids.Contains(p.Id)).ToListAsync();
 
-    public async Task<Backend.Data.Entities.Rol> CrearAsync(Backend.Data.Entities.Rol rol)
+    public async Task<UNET.Data.Entities.Rol> CreateAsync(UNET.Data.Entities.Rol rol)
     {
         _context.Roles.Add(rol);
         await _context.SaveChangesAsync();

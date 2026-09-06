@@ -4,7 +4,15 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Backend.Services.Auth;
+namespace UNET.Services;
+
+public interface IJwtTokenGenerator
+{
+    (string Token, DateTime Expiracion) Generar(
+        UNET.Data.Entities.Usuario usuario,
+        IEnumerable<string> roles,
+        IEnumerable<string> permisos);
+}
 
 public class JwtTokenGenerator : IJwtTokenGenerator
 {
@@ -16,7 +24,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     }
 
     public (string Token, DateTime Expiracion) Generar(
-        Backend.Data.Entities.Usuario usuario,
+        UNET.Data.Entities.Usuario usuario,
         IEnumerable<string> roles,
         IEnumerable<string> permisos)
     {
@@ -25,9 +33,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.Name, usuario.Legajo),
-            new("legajo", usuario.Legajo),
-            new("nombre", usuario.Nombre),
-            new("apellido", usuario.Apellido)
+            new("legajo", usuario.Legajo)
         };
 
         claims.AddRange(roles.Select(rol => new Claim("rol", rol)));
