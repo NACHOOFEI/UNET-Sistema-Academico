@@ -1,9 +1,14 @@
+using System.Text;
 using Backend.Authorization;
 using Backend.Data;
 using Backend.Repository.Rol;
+using Backend.Repository.Usuario;
+using Backend.Services.Auth;
 using Backend.Services.Rol;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -35,9 +40,32 @@ try
     builder.Services.AddScoped<IRolRepository, RolRepository>();
     builder.Services.AddScoped<IRolService, RolService>();
 
+    builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+    var jwtOptions = builder.Configuration.GetSection(JwtOptions.SeccionConfiguracion).Get<JwtOptions>()
+        ?? throw new InvalidOperationException("Falta configurar la seccion 'Jwt' en appsettings.json.");
+    builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SeccionConfiguracion));
+
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidateAudience = true,
+                ValidAudience = jwtOptions.Audience,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromMinutes(1)
+            };
+        });
+
     // Autorizacion dinamica por permiso ([RequierePermiso("nombre_permiso")]).
-    // TODO: falta configurar AddAuthentication().AddJwtBearer(...) cuando implementemos el login (paso 4 del RBAC).
-    // Sin eso, context.User nunca va a tener claims y estos endpoints van a devolver 403 siempre.
     builder.Services.AddAuthorization();
     builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermisoPolicyProvider>();
     builder.Services.AddScoped<IAuthorizationHandler, PermisoHandler>();

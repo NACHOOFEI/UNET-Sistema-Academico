@@ -17,7 +17,7 @@ public class AppDbContext : DbContext
     {
         modelBuilder.Entity<Usuario>(entity =>
         {
-            entity.HasIndex(u => u.Username).IsUnique();
+            entity.HasIndex(u => u.Legajo).IsUnique();
             entity.HasIndex(u => u.Email).IsUnique();
 
             entity.HasMany(u => u.Roles)
