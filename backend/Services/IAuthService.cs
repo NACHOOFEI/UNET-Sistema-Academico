@@ -1,6 +1,6 @@
-using Backend.Data.Dtos.Auth;
+using UNET.Data.Dtos.Auth;
 
-namespace Backend.Services.Auth;
+namespace UNET.Services;
 
 public interface IAuthService
 {

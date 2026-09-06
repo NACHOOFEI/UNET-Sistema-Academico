@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Backend.Data.Dtos.Auth;
+namespace UNET.Data.Dtos.Auth;
 
 public record LoginRequestDto(
     [Required(ErrorMessage = "El legajo es obligatorio.")] string Legajo,

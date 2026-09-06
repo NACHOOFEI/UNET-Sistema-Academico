@@ -1,9 +1,9 @@
-using Backend.Authorization;
-using Backend.Data.Dtos.Rol;
-using Backend.Services.Rol;
+using UNET.Authorization;
+using UNET.Data.Dtos.Rol;
+using UNET.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Backend.Controllers;
+namespace UNET.Controllers;
 
 [ApiController]
 [Route("api/roles")]
@@ -20,13 +20,13 @@ public class RolController : ControllerBase
 
     [HttpPost]
     [RequierePermiso("crear_gestionar_roles")]
-    public async Task<ActionResult<CrearRolResponseDto>> Crear([FromBody] CrearRolRequestDto request)
+    public async Task<ActionResult<CreateRolResponseDto>> Create([FromBody] CreateRolRequestDto request)
     {
         _logger.LogInformation("Creando rol {Nombre}", request.Nombre);
 
         try
         {
-            var resultado = await _rolService.CrearRolAsync(request);
+            var resultado = await _rolService.CreateRolAsync(request);
 
             if (!resultado.Exito)
             {

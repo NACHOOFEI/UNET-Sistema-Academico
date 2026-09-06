@@ -1,7 +1,7 @@
-using Backend.Data;
+using UNET.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend.Repository.Usuario;
+namespace UNET.Repositories;
 
 public class UsuarioRepository : IUsuarioRepository
 {
@@ -12,7 +12,7 @@ public class UsuarioRepository : IUsuarioRepository
         _context = context;
     }
 
-    public async Task<Backend.Data.Entities.Usuario?> ObtenerPorLegajoConRolesYPermisosAsync(string legajo) =>
+    public async Task<UNET.Data.Entities.Usuario?> ObtenerPorLegajoConRolesYPermisosAsync(string legajo) =>
         await _context.Usuarios
             .AsSplitQuery()
             .Include(u => u.Roles)

@@ -1,7 +1,7 @@
-using Backend.Data.Dtos.Auth;
-using Backend.Repository.Usuario;
+using UNET.Data.Dtos.Auth;
+using UNET.Repositories;
 
-namespace Backend.Services.Auth;
+namespace UNET.Services;
 
 public class AuthService : IAuthService
 {
@@ -45,8 +45,6 @@ public class AuthService : IAuthService
             token,
             usuario.Id,
             usuario.Legajo,
-            usuario.Nombre,
-            usuario.Apellido,
             roles,
             expiracion);
 

@@ -1,9 +1,9 @@
-namespace Backend.Services.Auth;
+namespace UNET.Services;
 
 public interface IJwtTokenGenerator
 {
     (string Token, DateTime Expiracion) Generar(
-        Backend.Data.Entities.Usuario usuario,
+        UNET.Data.Entities.Usuario usuario,
         IEnumerable<string> roles,
         IEnumerable<string> permisos);
 }

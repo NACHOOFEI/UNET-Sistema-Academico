@@ -1,4 +1,4 @@
-namespace Backend.Data.Entities;
+namespace UNET.Data.Entities;
 
 public class Rol
 {

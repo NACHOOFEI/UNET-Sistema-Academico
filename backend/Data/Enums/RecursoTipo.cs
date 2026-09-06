@@ -1,4 +1,4 @@
-namespace Backend.Data.Enums;
+namespace UNET.Data.Enums;
 
 public enum RecursoTipo
 {
