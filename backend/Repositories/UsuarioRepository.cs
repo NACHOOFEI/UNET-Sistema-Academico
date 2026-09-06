@@ -3,6 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace UNET.Repositories;
 
+public interface IUsuarioRepository
+{
+    Task<UNET.Data.Entities.Usuario?> ObtenerPorLegajoConRolesYPermisosAsync(string legajo);
+}
+
 public class UsuarioRepository : IUsuarioRepository
 {
     private readonly AppDbContext _context;

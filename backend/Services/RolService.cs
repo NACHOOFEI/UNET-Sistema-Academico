@@ -3,6 +3,11 @@ using UNET.Repositories;
 
 namespace UNET.Services;
 
+public interface IRolService
+{
+    Task<CreateRolResponseDto> CreateRolAsync(CreateRolRequestDto request);
+}
+
 public class RolService : IRolService
 {
     private readonly IRolRepository _rolRepository;

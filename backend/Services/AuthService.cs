@@ -3,6 +3,11 @@ using UNET.Repositories;
 
 namespace UNET.Services;
 
+public interface IAuthService
+{
+    Task<LoginResultDto> IniciarSesionAsync(LoginRequestDto request);
+}
+
 public class AuthService : IAuthService
 {
     private readonly IUsuarioRepository _usuarioRepository;

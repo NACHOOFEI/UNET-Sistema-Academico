@@ -6,6 +6,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace UNET.Services;
 
+public interface IJwtTokenGenerator
+{
+    (string Token, DateTime Expiracion) Generar(
+        UNET.Data.Entities.Usuario usuario,
+        IEnumerable<string> roles,
+        IEnumerable<string> permisos);
+}
+
 public class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly JwtOptions _opciones;
