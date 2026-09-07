@@ -12,8 +12,8 @@ using UNET.Data;
 namespace UNET.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260906223138_TrazabilidadRolActualizacion")]
-    partial class TrazabilidadRolActualizacion
+    [Migration("20260907183413_AuditoriaYBorradoRol")]
+    partial class AuditoriaYBorradoRol
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -135,23 +135,27 @@ namespace UNET.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ActualizadoPorUsuarioId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Descripcion")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("FechaActualizacion")
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Nombre")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Eliminado] = 0");
 
                     b.ToTable("Roles");
                 });

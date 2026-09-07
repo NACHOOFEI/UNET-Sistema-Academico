@@ -81,4 +81,42 @@ public class RolController : ApiControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, "Ocurrio un error al actualizar el rol.");
         }
     }
+
+    [HttpDelete("{id:guid}")]
+    [RequierePermiso("crear_gestionar_roles")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        _logger.LogInformation("Eliminando rol {RolId}", id);
+
+        var userId = GetUsuarioId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var result = await _rolService.DeleteRolAsync(id, userId.Value);
+
+            if (result.IsFailure)
+            {
+                _logger.LogWarning("No se pudo eliminar el rol {RolId}: {Error}", id, result.Error);
+
+                if (result.Error == "rol-no-encontrado")
+                {
+                    return NotFound(new { error_description = result.Error });
+                }
+
+                return Conflict(new { error_description = result.Error });
+            }
+
+            _logger.LogInformation("Rol {RolId} eliminado por usuario {UsuarioId}", id, userId);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inesperado al eliminar el rol {RolId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Ocurrio un error al eliminar el rol.");
+        }
+    }
 }

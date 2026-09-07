@@ -8,10 +8,13 @@ public interface IRolService
 {
     Task<Result<RolDto>> CreateRolAsync(CreateRolDto request);
     Task<Result<RolDto>> UpdateRolAsync(Guid rolId, UpdateRolDto request, Guid userId);
+    Task<Result> DeleteRolAsync(Guid rolId, Guid userId);
 }
 
 public class RolService : IRolService
 {
+    private const string PermisoGestionRoles = "crear_gestionar_roles";
+
     private readonly IRolRepository _rolRepository;
 
     public RolService(IRolRepository rolRepository)
@@ -51,5 +54,20 @@ public class RolService : IRolService
         }
 
         return Result<RolDto>.Ok(actualizado);
+    }
+
+    public async Task<Result> DeleteRolAsync(Guid rolId, Guid userId)
+    {
+        if (await _rolRepository.EsUltimoRolConPermisoAsync(rolId, PermisoGestionRoles))
+        {
+            return Result.Fail("ultimo-rol-administracion");
+        }
+
+        if (!await _rolRepository.DeleteAsync(rolId, userId))
+        {
+            return Result.Fail("rol-no-encontrado");
+        }
+
+        return Result.Ok();
     }
 }
