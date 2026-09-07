@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { MotivoFalloLogin, rolPrincipal, rutaInicioSegunRol } from '../../../core/models/usuario.model';
+import { MotivoFalloLogin } from '../../../core/models/usuario.model';
 
 /**
  * UNET-M1-CU01 - Iniciar sesion.
@@ -74,8 +74,7 @@ export class LoginComponent {
           return;
         }
 
-        const destino = rutaInicioSegunRol(rolPrincipal(resultado.usuario.roles));
-        void this.router.navigateByUrl(destino);
+        void this.router.navigateByUrl('/inicio');
       },
       error: () => {
         this.enviando.set(false);

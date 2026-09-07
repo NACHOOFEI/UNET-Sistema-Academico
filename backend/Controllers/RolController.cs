@@ -1,4 +1,5 @@
 using UNET.Authorization;
+using UNET.Data.Dtos.Permiso;
 using UNET.Data.Dtos.Rol;
 using UNET.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public class RolController : ApiControllerBase
     }
 
     [HttpGet]
-    [RequierePermiso("crear_gestionar_roles")]
+    [RequierePermiso("ver_roles")]
     public async Task<ActionResult<List<RolDto>>> GetAll()
     {
         _logger.LogInformation("Listando roles");
@@ -36,8 +37,26 @@ public class RolController : ApiControllerBase
         }
     }
 
+    [HttpGet("permisos-sobre-recurso")]
+    [RequierePermiso("ver_roles")]
+    public async Task<ActionResult<List<PermisoSobreRecursoDto>>> GetPermisosSobreRecurso()
+    {
+        _logger.LogInformation("Listando permisos sobre recurso disponibles");
+
+        try
+        {
+            var result = await _rolService.GetPermisosSobreRecursoAsync();
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inesperado al listar los permisos sobre recurso");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Ocurrio un error al listar los permisos.");
+        }
+    }
+
     [HttpPost]
-    [RequierePermiso("crear_gestionar_roles")]
+    [RequierePermiso("crear_roles")]
     public async Task<ActionResult<RolDto>> Create([FromBody] CreateRolDto request)
     {
         _logger.LogInformation("Creando rol {Nombre}", request.Nombre);
@@ -63,7 +82,7 @@ public class RolController : ApiControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [RequierePermiso("crear_gestionar_roles")]
+    [RequierePermiso("editar_roles")]
     public async Task<ActionResult<RolDto>> Update(Guid id, [FromBody] UpdateRolDto request)
     {
         _logger.LogInformation("Actualizando rol {RolId}", id);
@@ -101,7 +120,7 @@ public class RolController : ApiControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [RequierePermiso("crear_gestionar_roles")]
+    [RequierePermiso("eliminar_roles")]
     public async Task<IActionResult> Delete(Guid id)
     {
         _logger.LogInformation("Eliminando rol {RolId}", id);

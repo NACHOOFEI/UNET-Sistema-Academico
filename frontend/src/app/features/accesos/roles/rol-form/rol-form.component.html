@@ -1,0 +1,116 @@
+<main class="rol-form">
+  <header class="rol-form__encabezado">
+    <p class="rol-form__volanta">Accesos</p>
+    <h1 class="rol-form__titulo">{{ esEdicion ? 'Modificar rol' : 'Crear nuevo rol' }}</h1>
+  </header>
+
+  @if (errorCarga(); as mensaje) {
+    <div class="aviso aviso--error" role="alert">
+      <span class="aviso__marca"></span>
+      <span>{{ mensaje }}</span>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="rol-form__nota">Cargando...</p>
+  } @else {
+    <form class="tarjeta rol-form__tarjeta" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+      <div class="campo">
+        <label class="campo__etiqueta" for="nombre">Nombre de rol</label>
+        <input
+          id="nombre"
+          class="campo__control"
+          [class.campo__control--invalido]="campoInvalido(nombre)"
+          type="text"
+          formControlName="nombre"
+          placeholder="Ej.: Coordinador de carrera"
+          [attr.aria-invalid]="campoInvalido(nombre)"
+        />
+        @if (campoInvalido(nombre)) {
+          <p class="campo__error">El nombre del rol es obligatorio.</p>
+        }
+      </div>
+
+      <div class="campo">
+        <label class="campo__etiqueta" for="descripcion">Descripcion de rol</label>
+        <textarea
+          id="descripcion"
+          class="campo__control"
+          rows="3"
+          formControlName="descripcion"
+          [maxlength]="limiteDescripcion"
+          placeholder="Describa brevemente el alcance del rol"
+        ></textarea>
+        <p class="rol-form__ayuda">
+          {{ formulario.controls.descripcion.value.length }}/{{ limiteDescripcion }} caracteres
+        </p>
+      </div>
+
+      <fieldset class="rol-form__permisos">
+        <legend class="campo__etiqueta">Permisos de rol</legend>
+
+        <div class="rol-form__agregar-recurso">
+          <select #selectorRecurso class="campo__control" [disabled]="recursosDisponibles().length === 0">
+            @if (recursosDisponibles().length === 0) {
+              <option value="">No quedan recursos por agregar</option>
+            }
+            @for (recurso of recursosDisponibles(); track recurso) {
+              <option [value]="recurso">{{ recurso }}</option>
+            }
+          </select>
+          <button
+            class="boton boton--primario"
+            type="button"
+            [disabled]="recursosDisponibles().length === 0"
+            (click)="agregarRecurso(selectorRecurso.value); selectorRecurso.value = ''"
+          >
+            Agregar recurso
+          </button>
+        </div>
+
+        @if (filasAgregadas().length === 0) {
+          <p class="rol-form__nota">Todavia no se agrego ningun recurso a este rol.</p>
+        } @else {
+          @for (fila of filasAgregadas(); track fila.recursoNombre) {
+            <div class="rol-form__recurso">
+              <div class="rol-form__recurso-cabecera">
+                <p class="rol-form__recurso-nombre">{{ fila.recursoNombre }}</p>
+                <button class="boton boton--enlace" type="button" (click)="quitarRecurso(fila.recursoNombre)">
+                  Quitar recurso
+                </button>
+              </div>
+              <div class="rol-form__checks">
+                @for (celda of fila.celdas; track celda.id) {
+                  <label class="rol-form__check">
+                    <input
+                      type="checkbox"
+                      [checked]="estaSeleccionado(celda.id)"
+                      (change)="alternarPermiso(celda.id)"
+                    />
+                    {{ celda.permisoNombre }}
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        }
+      </fieldset>
+
+      @if (errorGuardar(); as mensaje) {
+        <div class="aviso aviso--error" role="alert">
+          <span class="aviso__marca"></span>
+          <span>{{ mensaje }}</span>
+        </div>
+      }
+
+      <div class="rol-form__acciones">
+        <button class="boton boton--enlace" type="button" [disabled]="guardando()" (click)="cancelar()">
+          Cancelar
+        </button>
+        <button class="boton boton--primario" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Guardar rol' }}
+        </button>
+      </div>
+    </form>
+  }
+</main>

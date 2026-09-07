@@ -1,0 +1,100 @@
+<main class="roles">
+  <header class="roles__encabezado">
+    <div>
+      <p class="roles__volanta">Accesos</p>
+      <h1 class="roles__titulo">Gestionar roles</h1>
+    </div>
+    @if (puedeCrear()) {
+      <a class="boton boton--primario" routerLink="nuevo">Crear nuevo rol</a>
+    }
+  </header>
+
+  @if (errorCarga(); as mensaje) {
+    <div class="aviso aviso--error" role="alert">
+      <span class="aviso__marca"></span>
+      <span>{{ mensaje }}</span>
+    </div>
+  }
+
+  <section class="tarjeta roles__tarjeta">
+    @if (cargando()) {
+      <p class="roles__nota">Cargando roles...</p>
+    } @else if (roles().length === 0) {
+      <p class="roles__nota">No hay roles creados en UNET.</p>
+    } @else {
+      <div class="tabla-contenedor">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Descripcion</th>
+              <th class="tabla__acciones-columna">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rol of roles(); track rol.id) {
+              <tr>
+                <td>{{ rol.nombre }}</td>
+                <td class="tabla__descripcion">{{ rol.descripcion || '-' }}</td>
+                <td class="tabla__acciones">
+                  @if (puedeEditar()) {
+                    <a class="boton boton--enlace" [routerLink]="[rol.id, 'editar']">Editar</a>
+                  }
+                  @if (puedeEliminar()) {
+                    <button
+                      class="boton boton--enlace boton--peligro"
+                      type="button"
+                      (click)="pedirEliminar(rol)"
+                    >
+                      Eliminar
+                    </button>
+                  }
+                  @if (!puedeEditar() && !puedeEliminar()) {
+                    <span class="tabla__sin-acciones">-</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  @if (rolAEliminar(); as rol) {
+    <div class="modal-fondo">
+      <div class="modal" role="alertdialog" aria-modal="true" [attr.aria-label]="'Eliminar rol ' + rol.nombre">
+        <h2 class="modal__titulo">Eliminar rol</h2>
+        <p class="modal__texto">
+          ¿Confirma que desea borrar el rol "{{ rol.nombre }}"? Esta accion no se puede deshacer.
+        </p>
+
+        @if (errorEliminar(); as mensaje) {
+          <div class="aviso aviso--error" role="alert">
+            <span class="aviso__marca"></span>
+            <span>{{ mensaje }}</span>
+          </div>
+        }
+
+        <div class="modal__acciones">
+          <button
+            class="boton boton--enlace"
+            type="button"
+            [disabled]="eliminando()"
+            (click)="cancelarEliminar()"
+          >
+            Cancelar
+          </button>
+          <button
+            class="boton boton--peligro-solido"
+            type="button"
+            [disabled]="eliminando()"
+            (click)="confirmarEliminar()"
+          >
+            {{ eliminando() ? 'Borrando...' : 'Confirmar, borrar rol' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</main>

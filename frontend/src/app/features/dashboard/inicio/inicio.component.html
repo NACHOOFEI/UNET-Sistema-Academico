@@ -1,26 +1,30 @@
 <main class="inicio">
+  <header class="inicio__encabezado">
+    <div>
+      <p class="inicio__volanta">UNET</p>
+      <h1 class="inicio__titulo">Hola, legajo {{ usuario()?.legajo }}</h1>
+    </div>
+    <button class="boton boton--enlace" type="button" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
   <section class="tarjeta inicio__tarjeta">
-    <p class="inicio__volanta">{{ portal() }}</p>
-    <h1 class="inicio__titulo">Bienvenido, {{ nombreCompleto() }}</h1>
-
-    <dl class="inicio__datos">
-      <div class="inicio__dato">
-        <dt>Legajo</dt>
-        <dd>{{ usuario()?.legajo }}</dd>
-      </div>
-      <div class="inicio__dato">
-        <dt>Correo institucional</dt>
-        <dd>{{ usuario()?.email }}</dd>
-      </div>
-      <div class="inicio__dato">
-        <dt>Rol</dt>
-        <dd>{{ rol() }}</dd>
-      </div>
-    </dl>
-
-    <p class="inicio__nota">
-      La sesion se inicio correctamente. El contenido de este portal se desarrolla en los
-      modulos de inscripcion, asignaturas y mesas de examen.
-    </p>
+    @if (paneles().length > 0) {
+      <h2 class="inicio__subtitulo">Paneles disponibles</h2>
+      <ul class="inicio__paneles">
+        @for (panel of paneles(); track panel.ruta) {
+          <li>
+            <a class="inicio__panel" [routerLink]="panel.ruta">
+              <span class="inicio__panel-etiqueta">{{ panel.etiqueta }}</span>
+              <span class="inicio__panel-descripcion">{{ panel.descripcion }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="inicio__nota">
+        Su usuario no tiene permisos asignados para ningun panel todavia. Comuniquese con
+        administracion.
+      </p>
+    }
   </section>
 </main>

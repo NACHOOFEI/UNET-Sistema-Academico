@@ -4,9 +4,20 @@
   padding: var(--esp-8) var(--esp-4);
 }
 
+.inicio__encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  width: 100%;
+  max-width: 38rem;
+  margin: 0 auto var(--esp-5);
+}
+
 .inicio__tarjeta {
   width: 100%;
   max-width: 38rem;
+  margin: 0 auto;
   padding: var(--esp-6);
 }
 
@@ -25,31 +36,45 @@
   color: var(--gris-900);
 }
 
-.inicio__datos {
+.inicio__subtitulo {
+  font-size: var(--texto-lg);
+  font-weight: 600;
+  color: var(--gris-800);
+}
+
+.inicio__paneles {
   display: grid;
-  gap: var(--esp-4);
-  margin: var(--esp-6) 0 0;
-  padding: var(--esp-5);
+  gap: var(--esp-3);
+  margin: var(--esp-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inicio__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  padding: var(--esp-4);
   border: 1px solid var(--gris-200);
   border-radius: var(--radio-md);
   background-color: var(--gris-50);
+  transition: border-color var(--transicion), background-color var(--transicion);
 }
 
-.inicio__dato {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--esp-4);
-  font-size: var(--texto-sm);
+.inicio__panel:hover {
+  border-color: var(--brand-400);
+  background-color: var(--brand-50);
+  text-decoration: none;
 }
 
-.inicio__dato dt {
-  color: var(--gris-500);
-}
-
-.inicio__dato dd {
-  margin: 0;
+.inicio__panel-etiqueta {
   font-weight: 600;
-  color: var(--gris-800);
+  color: var(--gris-900);
+}
+
+.inicio__panel-descripcion {
+  font-size: var(--texto-sm);
+  color: var(--gris-500);
 }
 
 .inicio__nota {
