@@ -6,6 +6,7 @@ namespace UNET.Services;
 
 public interface IRolService
 {
+    Task<Result<List<RolDto>>> GetRolesAsync();
     Task<Result<RolDto>> CreateRolAsync(CreateRolDto request);
     Task<Result<RolDto>> UpdateRolAsync(Guid rolId, UpdateRolDto request, Guid userId);
     Task<Result> DeleteRolAsync(Guid rolId, Guid userId);
@@ -20,6 +21,12 @@ public class RolService : IRolService
     public RolService(IRolRepository rolRepository)
     {
         _rolRepository = rolRepository;
+    }
+
+    public async Task<Result<List<RolDto>>> GetRolesAsync()
+    {
+        var roles = await _rolRepository.GetAllAsync();
+        return Result<List<RolDto>>.Ok(roles);
     }
 
     public async Task<Result<RolDto>> CreateRolAsync(CreateRolDto request)

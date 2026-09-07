@@ -18,6 +18,24 @@ public class RolController : ApiControllerBase
         _logger = logger;
     }
 
+    [HttpGet]
+    [RequierePermiso("crear_gestionar_roles")]
+    public async Task<ActionResult<List<RolDto>>> GetAll()
+    {
+        _logger.LogInformation("Listando roles");
+
+        try
+        {
+            var result = await _rolService.GetRolesAsync();
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inesperado al listar los roles");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Ocurrio un error al listar los roles.");
+        }
+    }
+
     [HttpPost]
     [RequierePermiso("crear_gestionar_roles")]
     public async Task<ActionResult<RolDto>> Create([FromBody] CreateRolDto request)

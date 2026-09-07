@@ -7,6 +7,7 @@ namespace UNET.Repositories;
 
 public interface IRolRepository
 {
+    Task<List<RolDto>> GetAllAsync();
     Task<bool> ExisteNombreAsync(string nombre);
     Task<bool> ExisteOtroConNombreAsync(string nombre, Guid idExcluido);
     Task<bool> EsUltimoRolConPermisoAsync(Guid rolId, string permiso);
@@ -22,6 +23,15 @@ public class RolRepository : IRolRepository
     public RolRepository(AppDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<List<RolDto>> GetAllAsync()
+    {
+        var roles = await _context.Roles
+            .Include(r => r.PermisosSobreRecurso)
+            .ToListAsync();
+
+        return roles.Select(MapToDto).ToList();
     }
 
     public async Task<bool> ExisteNombreAsync(string nombre) =>
