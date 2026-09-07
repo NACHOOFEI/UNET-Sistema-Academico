@@ -27,7 +27,9 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Rol>(entity =>
         {
-            entity.HasIndex(r => r.Nombre).IsUnique();
+            entity.HasIndex(r => r.Nombre).IsUnique().HasFilter("[Eliminado] = 0");
+
+            entity.HasQueryFilter(r => !r.Eliminado);
 
             entity.HasMany(r => r.PermisosSobreRecurso)
                 .WithMany(p => p.Roles)
