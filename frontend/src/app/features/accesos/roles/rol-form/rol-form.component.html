@@ -48,51 +48,34 @@
 
       <fieldset class="rol-form__permisos">
         <legend class="campo__etiqueta">Permisos de rol</legend>
+        <p class="rol-form__ayuda rol-form__ayuda--izq">
+          Defina el nivel de acceso de cada pantalla del sistema.
+        </p>
 
-        <div class="rol-form__agregar-recurso">
-          <select #selectorRecurso class="campo__control" [disabled]="recursosDisponibles().length === 0">
-            @if (recursosDisponibles().length === 0) {
-              <option value="">No quedan recursos por agregar</option>
-            }
-            @for (recurso of recursosDisponibles(); track recurso) {
-              <option [value]="recurso">{{ recurso }}</option>
-            }
-          </select>
-          <button
-            class="boton boton--primario"
-            type="button"
-            [disabled]="recursosDisponibles().length === 0"
-            (click)="agregarRecurso(selectorRecurso.value); selectorRecurso.value = ''"
-          >
-            Agregar recurso
-          </button>
-        </div>
-
-        @if (filasAgregadas().length === 0) {
-          <p class="rol-form__nota">Todavia no se agrego ningun recurso a este rol.</p>
+        @if (filasRecurso().length === 0) {
+          <p class="rol-form__nota">No hay recursos disponibles para asignar.</p>
         } @else {
-          @for (fila of filasAgregadas(); track fila.recursoNombre) {
-            <div class="rol-form__recurso">
-              <div class="rol-form__recurso-cabecera">
+          <ul class="rol-form__recursos" role="list">
+            @for (fila of filasRecurso(); track fila.recursoNombre) {
+              <li class="rol-form__recurso">
                 <p class="rol-form__recurso-nombre">{{ fila.recursoNombre }}</p>
-                <button class="boton boton--enlace" type="button" (click)="quitarRecurso(fila.recursoNombre)">
-                  Quitar recurso
-                </button>
-              </div>
-              <div class="rol-form__checks">
-                @for (celda of fila.celdas; track celda.id) {
-                  <label class="rol-form__check">
-                    <input
-                      type="checkbox"
-                      [checked]="estaSeleccionado(celda.id)"
-                      (change)="alternarPermiso(celda.id)"
-                    />
-                    {{ celda.permisoNombre }}
-                  </label>
-                }
-              </div>
-            </div>
-          }
+                <div class="segmentado" role="radiogroup" [attr.aria-label]="'Acceso a ' + fila.recursoNombre">
+                  @for (nivel of niveles; track nivel.valor) {
+                    <button
+                      type="button"
+                      class="segmentado__opcion segmentado__opcion--{{ nivel.valor }}"
+                      [class.segmentado__opcion--activa]="nivelDe(fila.recursoNombre) === nivel.valor"
+                      role="radio"
+                      [attr.aria-checked]="nivelDe(fila.recursoNombre) === nivel.valor"
+                      (click)="establecerNivel(fila.recursoNombre, nivel.valor)"
+                    >
+                      {{ nivel.etiqueta }}
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
         }
       </fieldset>
 

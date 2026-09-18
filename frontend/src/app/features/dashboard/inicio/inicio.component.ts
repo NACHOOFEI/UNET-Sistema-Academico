@@ -25,6 +25,12 @@ export class InicioComponent {
 
   readonly paneles = computed(() => panelesPara(this.usuario()?.permisos ?? []));
 
+  /** Rol(es) del usuario para mostrar en el encabezado del sidebar. */
+  readonly rol = computed(() => {
+    const roles = this.usuario()?.roles ?? [];
+    return roles.length > 0 ? roles.join(', ') : 'Sin rol asignado';
+  });
+
   cerrarSesion(): void {
     this.auth.cerrarSesion();
     void this.router.navigateByUrl('/ingresar');

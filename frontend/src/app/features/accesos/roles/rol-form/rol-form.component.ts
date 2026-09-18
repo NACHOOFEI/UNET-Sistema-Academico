@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -7,21 +7,32 @@ import { RolPayload } from '../models/rol.model';
 import { RolService } from '../services/rol.service';
 import { codigoErrorRol, mensajeErrorRol } from '../utils/rol-errores';
 
-/** Fila de la matriz Recurso x Permiso que arma el formulario de rol. */
-interface FilaPermiso {
+/** Nivel de acceso excluyente que el usuario asigna a cada recurso (estilo RBAC de Omada). */
+type NivelAcceso = 'modificar' | 'ver' | 'bloquear';
+
+/**
+ * Un recurso (pantalla) del catalogo con los ids de PermisoSobreRecurso que
+ * lo componen, separados para poder traducir el nivel elegido a la lista de
+ * permisos granulares que espera el backend.
+ */
+interface FilaRecurso {
   recursoNombre: string;
-  celdas: { id: string; permisoNombre: string }[];
+  verId: string | null;
+  todosLosIds: string[];
 }
 
+/** Nombre del permiso granular que representa la lectura. */
+const PERMISO_VER = 'Ver';
 const LIMITE_DESCRIPCION = 250;
 
 /**
  * UNET-M2-CU01 (Crear rol) y CU02 (Modificar rol) - mismo formulario para ambos.
  *
- * Flujo de "Permisos de rol" en dos pasos, tal como lo describe la
- * documentacion: primero se agrega un recurso (modulo/pantalla/entidad) y
- * recien ahi aparecen sus permisos (Ver/Crear/Editar/Eliminar) para tildar.
- * No se muestran de entrada los permisos de recursos que no se agregaron.
+ * "Permisos de rol" se presenta como una lista fija de recursos (pantallas),
+ * cada uno con tres niveles de acceso mutuamente excluyentes al estilo del RBAC
+ * de Omada: Modificar (acceso total), Solo ver (lectura) y Bloquear (sin acceso).
+ * El backend sigue trabajando con permisos granulares (ver/crear/editar/eliminar),
+ * asi que el nivel elegido se traduce a los ids correspondientes al guardar.
  */
 @Component({
   selector: 'app-rol-form',
@@ -45,24 +56,17 @@ export class RolFormComponent implements OnInit {
   readonly errorCarga = signal<string | null>(null);
   readonly errorGuardar = signal<string | null>(null);
 
-  /** Catalogo completo, agrupado por recurso. */
-  private readonly filasPermisos = signal<FilaPermiso[]>([]);
-  /** Recursos que el usuario agrego a este rol (paso 1). */
-  private readonly recursosAgregados = signal<ReadonlySet<string>>(new Set());
-  /** Ids de PermisoSobreRecurso tildados (paso 2, solo dentro de recursos agregados). */
-  private readonly permisosSeleccionados = signal<ReadonlySet<string>>(new Set());
+  /** Catalogo completo de recursos, siempre visible. */
+  readonly filasRecurso = signal<FilaRecurso[]>([]);
+  /** Nivel de acceso elegido por recurso; los ausentes se consideran "bloquear". */
+  private readonly nivelesPorRecurso = signal<ReadonlyMap<string, NivelAcceso>>(new Map());
 
-  readonly recursosDisponibles = computed(() => {
-    const agregados = this.recursosAgregados();
-    return this.filasPermisos()
-      .map((fila) => fila.recursoNombre)
-      .filter((nombre) => !agregados.has(nombre));
-  });
-
-  readonly filasAgregadas = computed(() => {
-    const agregados = this.recursosAgregados();
-    return this.filasPermisos().filter((fila) => agregados.has(fila.recursoNombre));
-  });
+  /** Opciones del control segmentado, en el orden en que se muestran. */
+  readonly niveles: { valor: NivelAcceso; etiqueta: string }[] = [
+    { valor: 'modificar', etiqueta: 'Modificar' },
+    { valor: 'ver', etiqueta: 'Solo ver' },
+    { valor: 'bloquear', etiqueta: 'Bloquear' }
+  ];
 
   readonly formulario = this.fb.nonNullable.group({
     nombre: ['', [Validators.required]],
@@ -80,7 +84,7 @@ export class RolFormComponent implements OnInit {
   ngOnInit(): void {
     this.rolService.obtenerPermisosSobreRecurso().subscribe({
       next: (catalogo) => {
-        this.filasPermisos.set(this.agruparPorRecurso(catalogo));
+        this.filasRecurso.set(this.agruparPorRecurso(catalogo));
 
         if (this.esEdicion) {
           this.cargarRolExistente(catalogo);
@@ -95,45 +99,14 @@ export class RolFormComponent implements OnInit {
     });
   }
 
-  agregarRecurso(nombre: string): void {
-    if (!nombre) {
-      return;
-    }
-
-    this.recursosAgregados.update((actuales) => new Set(actuales).add(nombre));
+  nivelDe(recursoNombre: string): NivelAcceso {
+    return this.nivelesPorRecurso().get(recursoNombre) ?? 'bloquear';
   }
 
-  quitarRecurso(recursoNombre: string): void {
-    const fila = this.filasPermisos().find((f) => f.recursoNombre === recursoNombre);
-    const idsDelRecurso = new Set(fila?.celdas.map((celda) => celda.id) ?? []);
-
-    this.recursosAgregados.update((actuales) => {
-      const nuevos = new Set(actuales);
-      nuevos.delete(recursoNombre);
-      return nuevos;
-    });
-
-    this.permisosSeleccionados.update((actuales) => {
-      const nuevos = new Set(actuales);
-      for (const id of idsDelRecurso) {
-        nuevos.delete(id);
-      }
-      return nuevos;
-    });
-  }
-
-  estaSeleccionado(id: string): boolean {
-    return this.permisosSeleccionados().has(id);
-  }
-
-  alternarPermiso(id: string): void {
-    this.permisosSeleccionados.update((actuales) => {
-      const nuevos = new Set(actuales);
-      if (nuevos.has(id)) {
-        nuevos.delete(id);
-      } else {
-        nuevos.add(id);
-      }
+  establecerNivel(recursoNombre: string, nivel: NivelAcceso): void {
+    this.nivelesPorRecurso.update((actuales) => {
+      const nuevos = new Map(actuales);
+      nuevos.set(recursoNombre, nivel);
       return nuevos;
     });
   }
@@ -150,7 +123,7 @@ export class RolFormComponent implements OnInit {
     const payload: RolPayload = {
       nombre: valores.nombre.trim(),
       descripcion: valores.descripcion.trim() || null,
-      permisosSobreRecursoIds: Array.from(this.permisosSeleccionados())
+      permisosSobreRecursoIds: this.idsSeleccionados()
     };
 
     this.guardando.set(true);
@@ -175,6 +148,23 @@ export class RolFormComponent implements OnInit {
     void this.router.navigate(['/accesos/roles']);
   }
 
+  /** Traduce el nivel de cada recurso a la lista de PermisoSobreRecurso que espera el backend. */
+  private idsSeleccionados(): string[] {
+    const ids: string[] = [];
+
+    for (const fila of this.filasRecurso()) {
+      const nivel = this.nivelDe(fila.recursoNombre);
+
+      if (nivel === 'modificar') {
+        ids.push(...fila.todosLosIds);
+      } else if (nivel === 'ver' && fila.verId) {
+        ids.push(fila.verId);
+      }
+    }
+
+    return ids;
+  }
+
   private cargarRolExistente(catalogo: PermisoSobreRecurso[]): void {
     this.rolService.obtenerRoles().subscribe({
       next: (roles) => {
@@ -187,10 +177,13 @@ export class RolFormComponent implements OnInit {
 
         this.formulario.patchValue({ nombre: rol.nombre, descripcion: rol.descripcion ?? '' });
 
-        const permisosDelRol = catalogo.filter((permiso) => rol.permisosSobreRecurso.includes(permiso.nombre));
+        const idsDelRol = new Set(
+          catalogo
+            .filter((permiso) => rol.permisosSobreRecurso.includes(permiso.nombre))
+            .map((permiso) => permiso.id)
+        );
 
-        this.permisosSeleccionados.set(new Set(permisosDelRol.map((permiso) => permiso.id)));
-        this.recursosAgregados.set(new Set(permisosDelRol.map((permiso) => permiso.recursoNombre)));
+        this.nivelesPorRecurso.set(this.derivarNiveles(idsDelRol));
         this.cargando.set(false);
       },
       error: () => {
@@ -200,14 +193,41 @@ export class RolFormComponent implements OnInit {
     });
   }
 
-  private agruparPorRecurso(catalogo: PermisoSobreRecurso[]): FilaPermiso[] {
-    const mapa = new Map<string, FilaPermiso>();
+  /**
+   * Deduce el nivel de cada recurso a partir de los permisos guardados:
+   * algun permiso de escritura => Modificar, solo "Ver" => Solo ver, ninguno => Bloquear.
+   */
+  private derivarNiveles(idsDelRol: ReadonlySet<string>): ReadonlyMap<string, NivelAcceso> {
+    const niveles = new Map<string, NivelAcceso>();
+
+    for (const fila of this.filasRecurso()) {
+      const asignados = fila.todosLosIds.filter((id) => idsDelRol.has(id));
+
+      if (asignados.length === 0) {
+        niveles.set(fila.recursoNombre, 'bloquear');
+      } else if (asignados.length === 1 && asignados[0] === fila.verId) {
+        niveles.set(fila.recursoNombre, 'ver');
+      } else {
+        niveles.set(fila.recursoNombre, 'modificar');
+      }
+    }
+
+    return niveles;
+  }
+
+  private agruparPorRecurso(catalogo: PermisoSobreRecurso[]): FilaRecurso[] {
+    const mapa = new Map<string, FilaRecurso>();
 
     for (const item of catalogo) {
       if (!mapa.has(item.recursoNombre)) {
-        mapa.set(item.recursoNombre, { recursoNombre: item.recursoNombre, celdas: [] });
+        mapa.set(item.recursoNombre, { recursoNombre: item.recursoNombre, verId: null, todosLosIds: [] });
       }
-      mapa.get(item.recursoNombre)!.celdas.push({ id: item.id, permisoNombre: item.permisoNombre });
+
+      const fila = mapa.get(item.recursoNombre)!;
+      fila.todosLosIds.push(item.id);
+      if (item.permisoNombre === PERMISO_VER) {
+        fila.verId = item.id;
+      }
     }
 
     return Array.from(mapa.values());

@@ -1,30 +1,44 @@
-<main class="inicio">
-  <header class="inicio__encabezado">
-    <div>
-      <p class="inicio__volanta">UNET</p>
-      <h1 class="inicio__titulo">Hola, legajo {{ usuario()?.legajo }}</h1>
+<div class="inicio">
+  <aside class="barra">
+    <div class="barra__cabecera">
+      <p class="barra__marca">UNET</p>
+      <p class="barra__rol-etiqueta">Rol</p>
+      <p class="barra__rol">{{ rol() }}</p>
     </div>
-    <button class="boton boton--enlace" type="button" (click)="cerrarSesion()">Cerrar sesion</button>
-  </header>
 
-  <section class="tarjeta inicio__tarjeta">
     @if (paneles().length > 0) {
-      <h2 class="inicio__subtitulo">Paneles disponibles</h2>
-      <ul class="inicio__paneles">
-        @for (panel of paneles(); track panel.ruta) {
-          <li>
-            <a class="inicio__panel" [routerLink]="panel.ruta">
-              <span class="inicio__panel-etiqueta">{{ panel.etiqueta }}</span>
-              <span class="inicio__panel-descripcion">{{ panel.descripcion }}</span>
-            </a>
-          </li>
-        }
-      </ul>
+      <nav class="barra__nav" aria-label="Paneles disponibles">
+        <p class="barra__seccion">Paneles disponibles</p>
+        <ul class="barra__paneles">
+          @for (panel of paneles(); track panel.ruta) {
+            <li>
+              <a class="barra__panel" [routerLink]="panel.ruta">
+                <span class="barra__panel-etiqueta">{{ panel.etiqueta }}</span>
+                <span class="barra__panel-descripcion">{{ panel.descripcion }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
     } @else {
-      <p class="inicio__nota">
+      <p class="barra__nota">
         Su usuario no tiene permisos asignados para ningun panel todavia. Comuniquese con
         administracion.
       </p>
     }
-  </section>
-</main>
+
+    <button class="boton boton--enlace barra__salir" type="button" (click)="cerrarSesion()">
+      Cerrar sesion
+    </button>
+  </aside>
+
+  <main class="contenido">
+    <header class="contenido__encabezado">
+      <p class="contenido__volanta">UNET</p>
+      <h1 class="contenido__titulo">Hola, {{ usuario()?.legajo }}</h1>
+      <p class="contenido__texto">
+        Elija un panel del menu lateral para comenzar a trabajar.
+      </p>
+    </header>
+  </main>
+</div>
