@@ -1,0 +1,99 @@
+<main class="rol-form">
+  <header class="rol-form__encabezado">
+    <p class="rol-form__volanta">Accesos</p>
+    <h1 class="rol-form__titulo">{{ esEdicion ? 'Modificar rol' : 'Crear nuevo rol' }}</h1>
+  </header>
+
+  @if (errorCarga(); as mensaje) {
+    <div class="aviso aviso--error" role="alert">
+      <span class="aviso__marca"></span>
+      <span>{{ mensaje }}</span>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="rol-form__nota">Cargando...</p>
+  } @else {
+    <form class="tarjeta rol-form__tarjeta" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+      <div class="campo">
+        <label class="campo__etiqueta" for="nombre">Nombre de rol</label>
+        <input
+          id="nombre"
+          class="campo__control"
+          [class.campo__control--invalido]="campoInvalido(nombre)"
+          type="text"
+          formControlName="nombre"
+          placeholder="Ej.: Coordinador de carrera"
+          [attr.aria-invalid]="campoInvalido(nombre)"
+        />
+        @if (campoInvalido(nombre)) {
+          <p class="campo__error">El nombre del rol es obligatorio.</p>
+        }
+      </div>
+
+      <div class="campo">
+        <label class="campo__etiqueta" for="descripcion">Descripcion de rol</label>
+        <textarea
+          id="descripcion"
+          class="campo__control"
+          rows="3"
+          formControlName="descripcion"
+          [maxlength]="limiteDescripcion"
+          placeholder="Describa brevemente el alcance del rol"
+        ></textarea>
+        <p class="rol-form__ayuda">
+          {{ formulario.controls.descripcion.value.length }}/{{ limiteDescripcion }} caracteres
+        </p>
+      </div>
+
+      <fieldset class="rol-form__permisos">
+        <legend class="campo__etiqueta">Permisos de rol</legend>
+        <p class="rol-form__ayuda rol-form__ayuda--izq">
+          Defina el nivel de acceso de cada pantalla del sistema.
+        </p>
+
+        @if (filasRecurso().length === 0) {
+          <p class="rol-form__nota">No hay recursos disponibles para asignar.</p>
+        } @else {
+          <ul class="rol-form__recursos" role="list">
+            @for (fila of filasRecurso(); track fila.recursoNombre) {
+              <li class="rol-form__recurso">
+                <p class="rol-form__recurso-nombre">{{ fila.recursoNombre }}</p>
+                <div class="segmentado" role="radiogroup" [attr.aria-label]="'Acceso a ' + fila.recursoNombre">
+                  @for (nivel of niveles; track nivel.valor) {
+                    <button
+                      type="button"
+                      class="segmentado__opcion segmentado__opcion--{{ nivel.valor }}"
+                      [class.segmentado__opcion--activa]="nivelDe(fila.recursoNombre) === nivel.valor"
+                      role="radio"
+                      [attr.aria-checked]="nivelDe(fila.recursoNombre) === nivel.valor"
+                      (click)="establecerNivel(fila.recursoNombre, nivel.valor)"
+                    >
+                      {{ nivel.etiqueta }}
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </fieldset>
+
+      @if (errorGuardar(); as mensaje) {
+        <div class="aviso aviso--error" role="alert">
+          <span class="aviso__marca"></span>
+          <span>{{ mensaje }}</span>
+        </div>
+      }
+
+      <div class="rol-form__acciones">
+        <button class="boton boton--enlace" type="button" [disabled]="guardando()" (click)="cancelar()">
+          Cancelar
+        </button>
+        <button class="boton boton--primario" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Guardar rol' }}
+        </button>
+      </div>
+    </form>
+  }
+</main>

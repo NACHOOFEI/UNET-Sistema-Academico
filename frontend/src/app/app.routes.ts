@@ -11,25 +11,34 @@ export const routes: Routes = [
   },
   {
     path: 'inicio',
+    title: 'Inicio | UNET',
+    canActivate: [sesionGuard],
+    loadComponent: () =>
+      import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+  },
+  {
+    path: 'accesos/roles',
     canActivate: [sesionGuard],
     children: [
       {
-        path: 'alumno',
-        title: 'Portal del alumno | UNET',
+        path: '',
+        title: 'Gestionar roles | UNET',
         loadComponent: () =>
-          import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+          import('./features/accesos/roles/roles-list/roles-list.component').then(
+            (m) => m.RolesListComponent
+          )
       },
       {
-        path: 'docente',
-        title: 'Portal docente | UNET',
+        path: 'nuevo',
+        title: 'Nuevo rol | UNET',
         loadComponent: () =>
-          import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+          import('./features/accesos/roles/rol-form/rol-form.component').then((m) => m.RolFormComponent)
       },
       {
-        path: 'gestion',
-        title: 'Portal de gestion | UNET',
+        path: ':id/editar',
+        title: 'Editar rol | UNET',
         loadComponent: () =>
-          import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+          import('./features/accesos/roles/rol-form/rol-form.component').then((m) => m.RolFormComponent)
       }
     ]
   },

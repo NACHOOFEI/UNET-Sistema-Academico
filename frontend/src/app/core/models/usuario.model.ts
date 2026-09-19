@@ -1,18 +1,15 @@
 /**
- * Roles del sistema. Coinciden con los actores definidos en la
- * documentacion del proyecto (alumno, docente, administrativo, administrador).
- * La gestion de roles como entidad editable corresponde al modulo M2.
+ * Usuario autenticado. Los roles son nombres libres definidos en el modulo de
+ * gestion de roles (M2) - no hay un set fijo, por eso son string[]. Los
+ * permisos son los codigos de PermisoSobreRecurso (ej. "ver_roles", "crear_roles")
+ * y son la unidad real de autorizacion: la navegacion se decide por permiso,
+ * nunca por nombre de rol (ver core/navegacion/paneles-disponibles.ts).
  */
-export type Rol = 'alumno' | 'docente' | 'administrativo' | 'administrador';
-
 export interface Usuario {
-  id: number;
+  id: string;
   legajo: string;
-  nombre: string;
-  apellido: string;
-  email: string;
-  roles: Rol[];
-  activo: boolean;
+  roles: string[];
+  permisos: string[];
 }
 
 /** Credenciales que el usuario ingresa en el formulario de inicio de sesion. */
@@ -32,26 +29,4 @@ export interface ResultadoLogin {
   exito: boolean;
   usuario?: Usuario;
   motivo?: MotivoFalloLogin;
-}
-
-/** Ruta de inicio segun el rol principal del usuario. */
-export function rutaInicioSegunRol(rol: Rol): string {
-  switch (rol) {
-    case 'alumno':
-      return '/inicio/alumno';
-    case 'docente':
-      return '/inicio/docente';
-    case 'administrativo':
-    case 'administrador':
-      return '/inicio/gestion';
-  }
-}
-
-/**
- * Rol con el que se decide el dashboard cuando el usuario tiene varios.
- * Se prioriza el de mayor alcance administrativo.
- */
-export function rolPrincipal(roles: Rol[]): Rol {
-  const prioridad: Rol[] = ['administrador', 'administrativo', 'docente', 'alumno'];
-  return prioridad.find((rol) => roles.includes(rol)) ?? 'alumno';
 }

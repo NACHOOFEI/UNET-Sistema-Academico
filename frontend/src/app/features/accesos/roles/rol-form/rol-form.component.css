@@ -1,0 +1,150 @@
+.rol-form {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--esp-8) var(--esp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+}
+
+.rol-form__volanta {
+  font-size: var(--texto-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.rol-form__titulo {
+  margin-top: var(--esp-2);
+  font-size: var(--texto-2xl);
+  font-weight: 600;
+  color: var(--gris-900);
+}
+
+.rol-form__tarjeta {
+  padding: var(--esp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+}
+
+.rol-form__nota {
+  font-size: var(--texto-sm);
+  color: var(--gris-500);
+}
+
+.rol-form__ayuda {
+  font-size: var(--texto-xs);
+  color: var(--gris-400);
+  text-align: right;
+}
+
+.rol-form__ayuda--izq {
+  text-align: left;
+}
+
+.rol-form__permisos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-md);
+}
+
+.rol-form__recursos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rol-form__recurso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  padding: var(--esp-3) 0;
+  border-bottom: 1px solid var(--gris-100);
+}
+
+.rol-form__recurso:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.rol-form__recurso-nombre {
+  font-weight: 600;
+  color: var(--gris-800);
+  font-size: var(--texto-sm);
+}
+
+/* ---------- Control segmentado (nivel de acceso por recurso) ---------- */
+.segmentado {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 3px;
+  gap: 2px;
+  background-color: var(--gris-100);
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-md);
+}
+
+.segmentado__opcion {
+  padding: 0.35rem 0.85rem;
+  border: none;
+  border-radius: var(--radio-sm);
+  background: transparent;
+  font-size: var(--texto-sm);
+  font-weight: 600;
+  color: var(--gris-500);
+  cursor: pointer;
+  transition: background-color var(--transicion), color var(--transicion),
+              box-shadow var(--transicion);
+}
+
+.segmentado__opcion:hover:not(.segmentado__opcion--activa) {
+  color: var(--gris-700);
+}
+
+.segmentado__opcion--activa {
+  background-color: var(--gris-0);
+  box-shadow: var(--sombra-sm);
+}
+
+.segmentado__opcion--modificar.segmentado__opcion--activa {
+  color: var(--exito-700);
+}
+
+.segmentado__opcion--ver.segmentado__opcion--activa {
+  color: var(--brand-600);
+}
+
+.segmentado__opcion--bloquear.segmentado__opcion--activa {
+  color: var(--gris-700);
+}
+
+@media (max-width: 34rem) {
+  .rol-form__recurso {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--esp-2);
+  }
+
+  .segmentado {
+    width: 100%;
+  }
+
+  .segmentado__opcion {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+.rol-form__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-3);
+}

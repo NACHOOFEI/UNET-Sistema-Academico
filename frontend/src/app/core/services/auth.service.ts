@@ -1,32 +1,33 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
-import { Observable, delay, of } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
-import { Credenciales, ResultadoLogin, Usuario } from '../models/usuario.model';
-import { USUARIOS_MOCK } from '../mock/usuarios.mock';
+import { environment } from '../../../environments/environment';
+import { LoginResponse, SesionAlmacenada } from '../models/auth.model';
+import { Credenciales, MotivoFalloLogin, ResultadoLogin, Usuario } from '../models/usuario.model';
 
 /**
  * Servicio de autenticacion - UNET-M1-CU01 (Iniciar sesion).
  *
- * Hoy resuelve la validacion contra datos de prueba locales. Al integrar el
- * backend, solo cambia el cuerpo de iniciarSesion() por una llamada HTTP:
- * la firma y el resto de la aplicacion quedan igual.
+ * Habla contra el backend real (POST /api/auth/login) y persiste la sesion en
+ * localStorage para que un refresh de pagina no obligue a volver a loguearse.
  *
  * Fuera del alcance de este ticket:
- * - Cerrar sesion (UNET-M1-CU03)
  * - Recuperar contrasena (UNET-M1-CU02)
  * - Cambiar contrasena (UNET-M1-CU04)
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  /** Latencia simulada para que el estado de carga del formulario sea visible. */
-  private static readonly LATENCIA_SIMULADA_MS = 600;
+  private static readonly CLAVE_SESION = 'unet_sesion';
 
-  private readonly usuarioActual = signal<Usuario | null>(null);
+  private readonly usuarioActual = signal<Usuario | null>(this.restaurarSesion());
 
   /** Usuario autenticado, o null si no hay sesion iniciada. */
   readonly usuario = this.usuarioActual.asReadonly();
 
   readonly estaAutenticado = computed(() => this.usuarioActual() !== null);
+
+  constructor(private readonly http: HttpClient) {}
 
   /**
    * Valida las credenciales y, si son correctas y el usuario esta activo,
@@ -39,25 +40,73 @@ export class AuthService {
   iniciarSesion(credenciales: Credenciales): Observable<ResultadoLogin> {
     const legajo = credenciales.legajo.trim();
 
-    const encontrado = USUARIOS_MOCK.find(
-      (usuario) => usuario.legajo === legajo && usuario.password === credenciales.password
-    );
-
-    if (!encontrado) {
-      return this.responder({ exito: false, motivo: 'credenciales-invalidas' });
-    }
-
-    if (!encontrado.activo) {
-      return this.responder({ exito: false, motivo: 'usuario-inactivo' });
-    }
-
-    const { password, ...usuario } = encontrado;
-    this.usuarioActual.set(usuario);
-
-    return this.responder({ exito: true, usuario });
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { legajo, password: credenciales.password })
+      .pipe(map((respuesta) => this.procesarRespuesta(respuesta)));
   }
 
-  private responder(resultado: ResultadoLogin): Observable<ResultadoLogin> {
-    return of(resultado).pipe(delay(AuthService.LATENCIA_SIMULADA_MS));
+  /** Limpia la sesion actual (memoria + localStorage). */
+  cerrarSesion(): void {
+    localStorage.removeItem(AuthService.CLAVE_SESION);
+    this.usuarioActual.set(null);
+  }
+
+  /** Token JWT de la sesion actual, o null si no hay sesion. Lo usa el interceptor HTTP. */
+  obtenerToken(): string | null {
+    return this.leerSesionAlmacenada()?.token ?? null;
+  }
+
+  private procesarRespuesta(respuesta: LoginResponse): ResultadoLogin {
+    if (!respuesta.exito || !respuesta.auth) {
+      return { exito: false, motivo: (respuesta.motivo as MotivoFalloLogin) ?? 'credenciales-invalidas' };
+    }
+
+    const sesion: SesionAlmacenada = {
+      token: respuesta.auth.token,
+      usuarioId: respuesta.auth.usuarioId,
+      legajo: respuesta.auth.legajo,
+      roles: respuesta.auth.roles,
+      permisos: respuesta.auth.permisos,
+      expiracion: respuesta.auth.expiracion
+    };
+
+    localStorage.setItem(AuthService.CLAVE_SESION, JSON.stringify(sesion));
+
+    const usuario = this.sesionAUsuario(sesion);
+    this.usuarioActual.set(usuario);
+
+    return { exito: true, usuario };
+  }
+
+  private restaurarSesion(): Usuario | null {
+    const sesion = this.leerSesionAlmacenada();
+    if (!sesion) {
+      return null;
+    }
+
+    if (new Date(sesion.expiracion).getTime() <= Date.now()) {
+      localStorage.removeItem(AuthService.CLAVE_SESION);
+      return null;
+    }
+
+    return this.sesionAUsuario(sesion);
+  }
+
+  private leerSesionAlmacenada(): SesionAlmacenada | null {
+    const crudo = localStorage.getItem(AuthService.CLAVE_SESION);
+    if (!crudo) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(crudo) as SesionAlmacenada;
+    } catch {
+      localStorage.removeItem(AuthService.CLAVE_SESION);
+      return null;
+    }
+  }
+
+  private sesionAUsuario(sesion: SesionAlmacenada): Usuario {
+    return { id: sesion.usuarioId, legajo: sesion.legajo, roles: sesion.roles, permisos: sesion.permisos };
   }
 }

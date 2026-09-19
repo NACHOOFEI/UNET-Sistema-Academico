@@ -1,4 +1,5 @@
 using UNET.Data;
+using UNET.Data.Dtos.Permiso;
 using UNET.Data.Dtos.Rol;
 using UNET.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ namespace UNET.Repositories;
 public interface IRolRepository
 {
     Task<List<RolDto>> GetAllAsync();
+    Task<List<PermisoSobreRecursoDto>> GetPermisosSobreRecursoAsync();
     Task<bool> ExisteNombreAsync(string nombre);
     Task<bool> ExisteOtroConNombreAsync(string nombre, Guid idExcluido);
     Task<bool> EsUltimoRolConPermisoAsync(Guid rolId, string permiso);
@@ -33,6 +35,18 @@ public class RolRepository : IRolRepository
 
         return roles.Select(MapToDto).ToList();
     }
+
+    public async Task<List<PermisoSobreRecursoDto>> GetPermisosSobreRecursoAsync() =>
+        await _context.PermisosSobreRecurso
+            .Include(p => p.Recurso)
+            .Include(p => p.Permiso)
+            .Select(p => new PermisoSobreRecursoDto(
+                p.Id,
+                p.Nombre,
+                p.Recurso.Nombre,
+                p.Recurso.Tipo.ToString(),
+                p.Permiso.Nombre))
+            .ToListAsync();
 
     public async Task<bool> ExisteNombreAsync(string nombre) =>
         await _context.Roles.AnyAsync(r => r.Nombre == nombre);

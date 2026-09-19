@@ -35,6 +35,10 @@ try
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+    const string politicaFrontendDev = "FrontendDev";
+    builder.Services.AddCors(options => options.AddPolicy(politicaFrontendDev, policy =>
+        policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod()));
+
     builder.Services.AddScoped<IRolRepository, RolRepository>();
     builder.Services.AddScoped<IRolService, RolService>();
 
@@ -80,6 +84,8 @@ try
     app.UseSerilogRequestLogging();
 
     app.UseHttpsRedirection();
+
+    app.UseCors(politicaFrontendDev);
 
     app.UseAuthentication();
     app.UseAuthorization();
