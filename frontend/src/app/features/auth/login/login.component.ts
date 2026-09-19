@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { USUARIOS_MOCK, UsuarioMock } from '../../../core/mock/usuarios.mock';
 import { MotivoFalloLogin, rolPrincipal, rutaInicioSegunRol } from '../../../core/models/usuario.model';
 
 /**
@@ -14,7 +15,7 @@ import { MotivoFalloLogin, rolPrincipal, rutaInicioSegunRol } from '../../../cor
  */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -31,8 +32,17 @@ export class LoginComponent {
 
   readonly mostrarPassword = signal(false);
 
+  /** Panel de credenciales de prueba, visible mientras no haya backend. */
+  readonly mostrarUsuariosPrueba = signal(false);
+
+  readonly usuariosPrueba: UsuarioMock[] = USUARIOS_MOCK;
+
   readonly formulario = this.fb.nonNullable.group({
-    legajo: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+    // Se admite legajo numerico o correo: el mock acepta los dos.
+    legajo: [
+      '',
+      [Validators.required, Validators.pattern(/^(\d+|[^@\s]+@[^@\s]+\.[^@\s]+)$/)]
+    ],
     password: ['', [Validators.required]]
   });
 
@@ -51,6 +61,16 @@ export class LoginComponent {
 
   alternarPassword(): void {
     this.mostrarPassword.update((visible) => !visible);
+  }
+
+  alternarUsuariosPrueba(): void {
+    this.mostrarUsuariosPrueba.update((visible) => !visible);
+  }
+
+  /** Carga en el formulario las credenciales de un usuario de prueba. */
+  usarUsuarioPrueba(usuario: UsuarioMock): void {
+    this.errorIngreso.set(null);
+    this.formulario.setValue({ legajo: usuario.legajo, password: usuario.password });
   }
 
   enviar(): void {

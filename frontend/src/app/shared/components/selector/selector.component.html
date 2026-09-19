@@ -1,0 +1,63 @@
+<div class="selector" [class.selector--abierto]="abierto()">
+  <button
+    #disparador
+    class="selector__disparador"
+    [class.selector__disparador--invalido]="invalido()"
+    [class.selector__disparador--vacio]="!valor()"
+    type="button"
+    role="combobox"
+    [id]="idControl()"
+    [disabled]="deshabilitado()"
+    [attr.aria-expanded]="abierto()"
+    [attr.aria-controls]="idLista"
+    [attr.aria-haspopup]="'listbox'"
+    [attr.aria-invalid]="invalido()"
+    [attr.aria-activedescendant]="abierto() && resaltada() >= 0 ? idOpcion(resaltada()) : null"
+    (click)="alternar()"
+    (keydown)="alPresionarTecla($event)"
+  >
+    <span class="selector__valor">{{ etiquetaActual() || placeholder() }}</span>
+    <span class="selector__flecha" aria-hidden="true"></span>
+  </button>
+
+  @if (abierto()) {
+    <div class="selector__panel">
+      @if (buscable()) {
+        <div class="selector__busqueda">
+          <input
+            #busqueda
+            class="selector__campo"
+            type="text"
+            autocomplete="off"
+            placeholder="Buscar..."
+            [value]="filtro()"
+            (input)="alEscribirBusqueda($event)"
+            (keydown)="alPresionarTecla($event)"
+          />
+        </div>
+      }
+
+      <ul class="selector__lista" role="listbox" [id]="idLista">
+        @for (opcion of visibles(); track opcion.valor; let i = $index) {
+          <li
+            class="selector__opcion"
+            [class.selector__opcion--resaltada]="i === resaltada()"
+            [class.selector__opcion--elegida]="opcion.valor === valor()"
+            role="option"
+            [id]="idOpcion(i)"
+            [attr.aria-selected]="opcion.valor === valor()"
+            (click)="elegir(opcion)"
+            (mouseenter)="resaltada.set(i)"
+          >
+            <span class="selector__etiqueta">{{ opcion.etiqueta }}</span>
+            @if (opcion.valor === valor()) {
+              <span class="selector__tilde" aria-hidden="true"></span>
+            }
+          </li>
+        } @empty {
+          <li class="selector__vacio">Sin resultados</li>
+        }
+      </ul>
+    </div>
+  }
+</div>
