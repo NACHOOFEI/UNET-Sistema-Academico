@@ -1,0 +1,1551 @@
+<div class="inscripcion">
+  <header class="topbar">
+    <p class="topbar__marca">
+      <span class="topbar__sigla">USN</span>
+      <span class="topbar__contexto">Inscripción 2026</span>
+    </p>
+
+    <a class="topbar__acceso" routerLink="/auth">Ya tengo cuenta</a>
+  </header>
+
+  @if (solicitudEnviada(); as solicitud) {
+    <!-- Paso 6: confirmacion visible al postulante. -->
+    <main class="inscripcion__contenido">
+      <section class="tarjeta confirmacion" role="status" data-confirmacion>
+        <p class="confirmacion__estado">Solicitud enviada</p>
+        <h2 class="confirmacion__titulo">Su solicitud quedó registrada como pendiente</h2>
+        <p class="confirmacion__texto">
+          Guarde el código de seguimiento. La institución revisará la documentación y le
+          escribirá a <strong>{{ solicitud.contacto.emailPrincipal }}</strong>.
+        </p>
+
+        <dl class="confirmacion__datos">
+          <div class="confirmacion__dato">
+            <dt>Código de solicitud</dt>
+            <dd class="confirmacion__codigo">{{ solicitud.codigo }}</dd>
+          </div>
+          <div class="confirmacion__dato">
+            <dt>Estado</dt>
+            <dd>Pendiente de revisión</dd>
+          </div>
+          <div class="confirmacion__dato">
+            <dt>Fecha de envío</dt>
+            <dd>{{ solicitud.enviadaEl | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          </div>
+          <div class="confirmacion__dato">
+            <dt>Carrera</dt>
+            <dd>{{ nombreCarrera(solicitud.inscripcion.carreraId) }}</dd>
+          </div>
+          <div class="confirmacion__dato">
+            <dt>Modalidad y turno</dt>
+            <dd>
+              {{ solicitud.inscripcion.modalidad }}
+              @if (solicitud.inscripcion.turno) {
+                · turno {{ solicitud.inscripcion.turno }}
+              }
+            </dd>
+          </div>
+          <div class="confirmacion__dato">
+            <dt>Documentación adjunta</dt>
+            <dd>{{ cantidadDocumentos(solicitud) }} archivo(s)</dd>
+          </div>
+        </dl>
+
+        <div class="confirmacion__acciones">
+          <a class="boton boton--primario" routerLink="/">Volver al inicio</a>
+          <a class="boton boton--suave" routerLink="/auth">Ir al acceso</a>
+        </div>
+
+        <p class="confirmacion__nota">
+          Si detecta un error en los datos enviados, comuníquese con Bedelía indicando el código
+          de la solicitud. No vuelva a completar el formulario: no se admiten solicitudes
+          duplicadas con el mismo documento.
+        </p>
+      </section>
+    </main>
+  } @else {
+    <div class="inscripcion__cuerpo">
+      <main class="inscripcion__contenido">
+        <div class="pagina" data-encabezado>
+          <a class="volver" routerLink="/">
+            <span class="volver__flecha" aria-hidden="true"></span>
+            Volver al inicio
+          </a>
+
+          <p class="pagina__volanta">Ciclo lectivo 2026</p>
+          <h1 class="pagina__titulo">Formulario de Inscripción</h1>
+          <span class="pagina__linea" aria-hidden="true"></span>
+          <p class="pagina__subtitulo">
+            Complete cuidadosamente todos los campos obligatorios para procesar su solicitud.
+          </p>
+        </div>
+
+        <!-- Indicador de etapas: permite volver a las ya completadas. -->
+        <nav class="pasos" data-pasos aria-label="Etapas del formulario">
+          <ol class="pasos__lista">
+            @for (paso of pasos; track paso.id; let i = $index) {
+              <li class="pasos__item">
+                <button
+                  class="paso"
+                  type="button"
+                  [class.paso--activo]="pasoActual() === i"
+                  [class.paso--hecho]="i < pasoActual() && pasoCompleto(i)"
+                  [disabled]="i > maximoVisitado()"
+                  [attr.aria-current]="pasoActual() === i ? 'step' : null"
+                  (click)="irA(i)"
+                >
+                  <span class="paso__indice">{{ i + 1 }}</span>
+                  <span class="paso__titulo">{{ paso.titulo }}</span>
+                </button>
+              </li>
+            }
+          </ol>
+
+          <div class="progreso">
+            <span class="progreso__barra" data-progreso [style.width.%]="progreso()"></span>
+          </div>
+        </nav>
+
+        @if (avisoPaso(); as mensaje) {
+          <div class="aviso aviso--error" role="alert" data-aviso>
+            <span class="aviso__marca"></span>
+            <span>{{ mensaje }}</span>
+          </div>
+        }
+
+        @if (errorEnvio(); as mensaje) {
+          <div class="aviso aviso--error" role="alert">
+            <span class="aviso__marca"></span>
+            <span>{{ mensaje }}</span>
+          </div>
+        }
+
+        @if (seccionesConErrores(); as pendientes) {
+          @if (pendientes.length > 0) {
+            <div class="aviso aviso--error" role="alert">
+              <span class="aviso__marca"></span>
+              <div>
+                <p><strong>Faltan datos para enviar la solicitud.</strong></p>
+                <p>Revise: </p>
+                <ul class="aviso__lista">
+                  @for (seccion of pendientes; track seccion.id) {
+                    <li>
+                      <button class="boton boton--enlace" type="button" (click)="irASeccion(seccion)">
+                        {{ seccion.titulo }}
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+        }
+
+        <form class="formulario" [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+          @if (enPaso('identidad')) {
+            <div class="paso-contenido" data-paso>
+              <!-- ============ Datos personales ============ -->
+              <section class="tarjeta seccion" id="personales" formGroupName="personales">
+                <h2 class="seccion__titulo">Datos personales</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="apellido">Apellido/s *</label>
+                    <input
+                      id="apellido"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(personales.apellido)"
+                      type="text"
+                      autocomplete="family-name"
+                      formControlName="apellido"
+                      [attr.aria-invalid]="campoInvalido(personales.apellido)"
+                    />
+                    @if (campoInvalido(personales.apellido)) {
+                      <p class="campo__error">{{ mensajeError(personales.apellido, 'El apellido') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="nombre">Nombre/s *</label>
+                    <input
+                      id="nombre"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(personales.nombre)"
+                      type="text"
+                      autocomplete="given-name"
+                      formControlName="nombre"
+                      [attr.aria-invalid]="campoInvalido(personales.nombre)"
+                    />
+                    @if (campoInvalido(personales.nombre)) {
+                      <p class="campo__error">{{ mensajeError(personales.nombre, 'El nombre') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="sexo">Sexo *</label>
+                    <app-selector
+                      idControl="sexo"
+                      formControlName="sexo"
+                      [opciones]="sexos"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(personales.sexo)"
+                    />
+                    @if (campoInvalido(personales.sexo)) {
+                      <p class="campo__error">{{ mensajeError(personales.sexo, 'El sexo') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="identidadGenero">Identidad de género *</label>
+                    <app-selector
+                      idControl="identidadGenero"
+                      formControlName="identidadGenero"
+                      [opciones]="identidadesGenero"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(personales.identidadGenero)"
+                    />
+                    @if (campoInvalido(personales.identidadGenero)) {
+                      <p class="campo__error">
+                        {{ mensajeError(personales.identidadGenero, 'La identidad de género') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="tipoDocumento">Tipo de documento *</label>
+                    <app-selector
+                      idControl="tipoDocumento"
+                      formControlName="tipoDocumento"
+                      [opciones]="tiposDocumento"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(personales.tipoDocumento)"
+                    />
+                    @if (campoInvalido(personales.tipoDocumento)) {
+                      <p class="campo__error">
+                        {{ mensajeError(personales.tipoDocumento, 'El tipo de documento') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="numeroDocumento">Número de documento *</label>
+                    <input
+                      id="numeroDocumento"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(personales.numeroDocumento)"
+                      type="text"
+                      inputmode="numeric"
+                      placeholder="Sin puntos ni espacios"
+                      formControlName="numeroDocumento"
+                      [attr.aria-invalid]="campoInvalido(personales.numeroDocumento)"
+                    />
+                    @if (campoInvalido(personales.numeroDocumento)) {
+                      <p class="campo__error">
+                        {{
+                          mensajeError(
+                            personales.numeroDocumento,
+                            'El número de documento',
+                            'El número de documento debe tener entre 6 y 10 dígitos, sin puntos.'
+                          )
+                        }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="cuil">CUIL *</label>
+                    <input
+                      id="cuil"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(personales.cuil)"
+                      type="text"
+                      inputmode="numeric"
+                      placeholder="11 dígitos, sin guiones"
+                      formControlName="cuil"
+                      [attr.aria-invalid]="campoInvalido(personales.cuil)"
+                    />
+                    @if (campoInvalido(personales.cuil)) {
+                      <p class="campo__error">
+                        {{ mensajeError(personales.cuil, 'El CUIL', 'El CUIL debe tener 11 dígitos, sin guiones.') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="grupoSanguineo">Grupo sanguíneo *</label>
+                    <app-selector
+                      idControl="grupoSanguineo"
+                      formControlName="grupoSanguineo"
+                      [opciones]="gruposSanguineos"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(personales.grupoSanguineo)"
+                    />
+                    @if (campoInvalido(personales.grupoSanguineo)) {
+                      <p class="campo__error">
+                        {{ mensajeError(personales.grupoSanguineo, 'El grupo sanguíneo') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="nacionalidad">Nacionalidad *</label>
+                    <app-selector
+                      idControl="nacionalidad"
+                      formControlName="nacionalidad"
+                      [opciones]="opcionesNacionalidades"
+                      [buscable]="true"
+                      placeholder="Buscar nacionalidad"
+                      [invalido]="campoInvalido(personales.nacionalidad)"
+                    />
+                    @if (campoInvalido(personales.nacionalidad)) {
+                      <p class="campo__error">
+                        {{ mensajeError(personales.nacionalidad, 'La nacionalidad') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="estadoCivil">Estado civil</label>
+                    <app-selector
+                      idControl="estadoCivil"
+                      formControlName="estadoCivil"
+                      [opciones]="estadosCiviles"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="fechaNacimiento">Fecha de nacimiento *</label>
+                    <input
+                      id="fechaNacimiento"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(personales.fechaNacimiento)"
+                      type="date"
+                      autocomplete="bday"
+                      formControlName="fechaNacimiento"
+                      [attr.aria-invalid]="campoInvalido(personales.fechaNacimiento)"
+                    />
+                    @if (campoInvalido(personales.fechaNacimiento)) {
+                      <p class="campo__error">
+                        {{ mensajeError(personales.fechaNacimiento, 'La fecha de nacimiento') }}
+                      </p>
+                    } @else {
+                      <p class="campo__ayuda">Debe tener al menos {{ edadMinimaInscripcion }} años.</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="paisNacimiento">País de nacimiento *</label>
+                    <app-selector
+                      idControl="paisNacimiento"
+                      formControlName="paisNacimiento"
+                      [opciones]="opcionesPaises"
+                      [buscable]="true"
+                      placeholder="Buscar país"
+                      [invalido]="campoInvalido(personales.paisNacimiento)"
+                    />
+                    @if (campoInvalido(personales.paisNacimiento)) {
+                      <p class="campo__error">
+                        {{ mensajeError(personales.paisNacimiento, 'El país de nacimiento') }}
+                      </p>
+                    }
+                  </div>
+
+                  @if (naceEnPaisLocal()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="provinciaNacimiento">
+                        Provincia de nacimiento *
+                      </label>
+                      <app-selector
+                        idControl="provinciaNacimiento"
+                        formControlName="provinciaNacimiento"
+                        [opciones]="opcionesProvincias"
+                        [buscable]="true"
+                        placeholder="Buscar provincia"
+                        [invalido]="campoInvalido(personales.provinciaNacimiento)"
+                      />
+                      @if (campoInvalido(personales.provinciaNacimiento)) {
+                        <p class="campo__error">
+                          {{ mensajeError(personales.provinciaNacimiento, 'La provincia de nacimiento') }}
+                        </p>
+                      }
+                    </div>
+                  }
+
+                  @if (naceEnPaisLocal() && tieneProvinciaNacimiento()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="ciudadNacimiento">Ciudad de nacimiento *</label>
+                      <input
+                        id="ciudadNacimiento"
+                        class="campo__control"
+                        [class.campo__control--invalido]="campoInvalido(personales.ciudadNacimiento)"
+                        type="text"
+                        formControlName="ciudadNacimiento"
+                        [attr.aria-invalid]="campoInvalido(personales.ciudadNacimiento)"
+                      />
+                      @if (campoInvalido(personales.ciudadNacimiento)) {
+                        <p class="campo__error">
+                          {{ mensajeError(personales.ciudadNacimiento, 'La ciudad de nacimiento') }}
+                        </p>
+                      }
+                    </div>
+                  }
+
+                  @if (naceEnProvinciaConPartido()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="partidoNacimiento">Partido</label>
+                      <input
+                        id="partidoNacimiento"
+                        class="campo__control"
+                        type="text"
+                        formControlName="partidoNacimiento"
+                      />
+                    </div>
+                  }
+                </div>
+              </section>
+            </div>
+          }
+
+          @if (enPaso('contacto')) {
+            <div class="paso-contenido" data-paso>
+              <!-- ============ Domicilio ============ -->
+              <section class="tarjeta seccion" id="domicilio" formGroupName="domicilio">
+                <h2 class="seccion__titulo">Domicilio</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="paisResidencia">País de residencia *</label>
+                    <app-selector
+                      idControl="paisResidencia"
+                      formControlName="paisResidencia"
+                      [opciones]="opcionesPaises"
+                      [buscable]="true"
+                      placeholder="Buscar país"
+                      [invalido]="campoInvalido(domicilio.paisResidencia)"
+                    />
+                    @if (campoInvalido(domicilio.paisResidencia)) {
+                      <p class="campo__error">
+                        {{ mensajeError(domicilio.paisResidencia, 'El país de residencia') }}
+                      </p>
+                    }
+                  </div>
+
+                  @if (resideEnPaisLocal()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="provinciaResidencia">
+                        Provincia de residencia *
+                      </label>
+                      <app-selector
+                        idControl="provinciaResidencia"
+                        formControlName="provinciaResidencia"
+                        [opciones]="opcionesProvincias"
+                        [buscable]="true"
+                        placeholder="Buscar provincia"
+                        [invalido]="campoInvalido(domicilio.provinciaResidencia)"
+                      />
+                      @if (campoInvalido(domicilio.provinciaResidencia)) {
+                        <p class="campo__error">
+                          {{ mensajeError(domicilio.provinciaResidencia, 'La provincia de residencia') }}
+                        </p>
+                      }
+                    </div>
+                  }
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="ciudad">Ciudad / Localidad *</label>
+                    <input
+                      id="ciudad"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(domicilio.ciudad)"
+                      type="text"
+                      formControlName="ciudad"
+                      [attr.aria-invalid]="campoInvalido(domicilio.ciudad)"
+                    />
+                    @if (campoInvalido(domicilio.ciudad)) {
+                      <p class="campo__error">{{ mensajeError(domicilio.ciudad, 'La ciudad') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="codigoPostal">Código postal</label>
+                    <input
+                      id="codigoPostal"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(domicilio.codigoPostal)"
+                      type="text"
+                      autocomplete="postal-code"
+                      formControlName="codigoPostal"
+                      [attr.aria-invalid]="campoInvalido(domicilio.codigoPostal)"
+                    />
+                    @if (campoInvalido(domicilio.codigoPostal)) {
+                      <p class="campo__error">
+                        {{
+                          mensajeError(
+                            domicilio.codigoPostal,
+                            'El código postal',
+                            resideEnPaisLocal()
+                              ? 'Formato esperado: 1663 o B1663ABC.'
+                              : 'Use entre 3 y 10 caracteres alfanuméricos.'
+                          )
+                        }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="calle">Calle *</label>
+                    <input
+                      id="calle"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(domicilio.calle)"
+                      type="text"
+                      formControlName="calle"
+                      [attr.aria-invalid]="campoInvalido(domicilio.calle)"
+                    />
+                    @if (campoInvalido(domicilio.calle)) {
+                      <p class="campo__error">{{ mensajeError(domicilio.calle, 'La calle') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="numero">Número *</label>
+                    <input
+                      id="numero"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(domicilio.numero)"
+                      type="text"
+                      formControlName="numero"
+                      [attr.aria-invalid]="campoInvalido(domicilio.numero)"
+                    />
+                    @if (campoInvalido(domicilio.numero)) {
+                      <p class="campo__error">{{ mensajeError(domicilio.numero, 'El número') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="departamentoPiso">Departamento / Piso</label>
+                    <input
+                      id="departamentoPiso"
+                      class="campo__control"
+                      type="text"
+                      formControlName="departamentoPiso"
+                    />
+                  </div>
+                </div>
+              </section>
+              <!-- ============ Datos de contacto ============ -->
+              <section class="tarjeta seccion" id="contacto" formGroupName="contacto">
+                <h2 class="seccion__titulo">Datos de contacto</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="emailPrincipal">
+                      Correo electrónico principal *
+                    </label>
+                    <input
+                      id="emailPrincipal"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(contacto.emailPrincipal)"
+                      type="email"
+                      autocomplete="email"
+                      formControlName="emailPrincipal"
+                      [attr.aria-invalid]="campoInvalido(contacto.emailPrincipal)"
+                    />
+                    @if (campoInvalido(contacto.emailPrincipal)) {
+                      <p class="campo__error">
+                        {{ mensajeError(contacto.emailPrincipal, 'El correo electrónico') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="emailAlternativo">
+                      Correo electrónico alternativo *
+                    </label>
+                    <input
+                      id="emailAlternativo"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(contacto.emailAlternativo)"
+                      type="email"
+                      formControlName="emailAlternativo"
+                      [attr.aria-invalid]="campoInvalido(contacto.emailAlternativo)"
+                    />
+                    @if (campoInvalido(contacto.emailAlternativo)) {
+                      <p class="campo__error">
+                        {{ mensajeError(contacto.emailAlternativo, 'El correo alternativo') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="celular">Celular (con código de país) *</label>
+                    <input
+                      id="celular"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(contacto.celular)"
+                      type="tel"
+                      autocomplete="tel"
+                      placeholder="+54 11 5555 5555"
+                      formControlName="celular"
+                      [attr.aria-invalid]="campoInvalido(contacto.celular)"
+                    />
+                    @if (campoInvalido(contacto.celular)) {
+                      <p class="campo__error">
+                        {{
+                          mensajeError(
+                            contacto.celular,
+                            'El celular',
+                            'Ingrese el celular con código de país, por ejemplo +54 11 5555 5555.'
+                          )
+                        }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="telefonoFijo">Teléfono fijo</label>
+                    <input
+                      id="telefonoFijo"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(contacto.telefonoFijo)"
+                      type="tel"
+                      placeholder="011 4444 4444"
+                      formControlName="telefonoFijo"
+                      [attr.aria-invalid]="campoInvalido(contacto.telefonoFijo)"
+                    />
+                    @if (campoInvalido(contacto.telefonoFijo)) {
+                      <p class="campo__error">
+                        {{
+                          mensajeError(
+                            contacto.telefonoFijo,
+                            'El teléfono fijo',
+                            'Use solo números, espacios, paréntesis o guiones.'
+                          )
+                        }}
+                      </p>
+                    }
+                  </div>
+                </div>
+
+                @if (grupoContacto.hasError('correosIguales') && contacto.emailAlternativo.touched) {
+                  <p class="campo__error">
+                    El correo alternativo debe ser distinto del principal.
+                  </p>
+                }
+              </section>
+              <!-- ============ Contacto de emergencia ============ -->
+              <section class="tarjeta seccion" id="emergencia" formGroupName="emergencia">
+                <h2 class="seccion__titulo">¿A quién recurrir en caso de que lo necesites?</h2>
+                <p class="seccion__ayuda">
+                  Persona a la que la institución puede contactar ante una urgencia.
+                </p>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="vinculo">Vínculo *</label>
+                    <app-selector
+                      idControl="vinculo"
+                      formControlName="vinculo"
+                      [opciones]="vinculos"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(emergencia.vinculo)"
+                    />
+                    @if (campoInvalido(emergencia.vinculo)) {
+                      <p class="campo__error">{{ mensajeError(emergencia.vinculo, 'El vínculo') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="nombreEmergencia">Nombre y apellido *</label>
+                    <input
+                      id="nombreEmergencia"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(emergencia.nombreApellido)"
+                      type="text"
+                      formControlName="nombreApellido"
+                      [attr.aria-invalid]="campoInvalido(emergencia.nombreApellido)"
+                    />
+                    @if (campoInvalido(emergencia.nombreApellido)) {
+                      <p class="campo__error">
+                        {{ mensajeError(emergencia.nombreApellido, 'El nombre y apellido') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="telefonoEmergencia">
+                      Teléfono de contacto (con característica) *
+                    </label>
+                    <input
+                      id="telefonoEmergencia"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(emergencia.telefono)"
+                      type="tel"
+                      placeholder="011 4444 4444"
+                      formControlName="telefono"
+                      [attr.aria-invalid]="campoInvalido(emergencia.telefono)"
+                    />
+                    @if (campoInvalido(emergencia.telefono)) {
+                      <p class="campo__error">
+                        {{
+                          mensajeError(
+                            emergencia.telefono,
+                            'El teléfono',
+                            'Incluya la característica, por ejemplo 011 4444 4444.'
+                          )
+                        }}
+                      </p>
+                    }
+                  </div>
+                </div>
+              </section>
+            </div>
+          }
+
+          @if (enPaso('estudios')) {
+            <div class="paso-contenido" data-paso>
+              <!-- ============ Educacion secundaria ============ -->
+              <section class="tarjeta seccion" id="secundaria" formGroupName="secundaria">
+                <h2 class="seccion__titulo">Educación secundaria</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="secundarioCompleto">¿Secundario completo? *</label>
+                    <app-selector
+                      idControl="secundarioCompleto"
+                      formControlName="secundarioCompleto"
+                      [opciones]="siNo"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(secundaria.secundarioCompleto)"
+                    />
+                    @if (campoInvalido(secundaria.secundarioCompleto)) {
+                      <p class="campo__error">
+                        {{ mensajeError(secundaria.secundarioCompleto, 'Este dato') }}
+                      </p>
+                    }
+                  </div>
+
+                  @if (secundarioCompleto()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="anioEgreso">Año de egreso *</label>
+                      <app-selector
+                        idControl="anioEgreso"
+                        formControlName="anioEgreso"
+                        [opciones]="opcionesAnios"
+                        placeholder="Seleccione un año"
+                        [invalido]="campoInvalido(secundaria.anioEgreso)"
+                      />
+                      @if (campoInvalido(secundaria.anioEgreso)) {
+                        <p class="campo__error">
+                          {{ mensajeError(secundaria.anioEgreso, 'El año de egreso') }}
+                        </p>
+                      }
+                    </div>
+                  }
+
+                  <div class="campo campo--ancho">
+                    <label class="campo__etiqueta" for="tituloSecundario">
+                      Nombre del título secundario obtenido o a obtener *
+                    </label>
+                    <input
+                      id="tituloSecundario"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(secundaria.tituloSecundario)"
+                      type="text"
+                      formControlName="tituloSecundario"
+                      [attr.aria-invalid]="campoInvalido(secundaria.tituloSecundario)"
+                    />
+                    @if (campoInvalido(secundaria.tituloSecundario)) {
+                      <p class="campo__error">
+                        {{ mensajeError(secundaria.tituloSecundario, 'El título secundario') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="secundarioTecnico">¿Secundario técnico?</label>
+                    <app-selector
+                      idControl="secundarioTecnico"
+                      formControlName="secundarioTecnico"
+                      [opciones]="siNo"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+                </div>
+
+                <!-- Carga de la constancia de estudios (UNET-CUS2). -->
+                <app-carga-documento
+                  formControlName="constanciaEstudios"
+                  [requisito]="requisitoConstanciaEstudios"
+                  [invalido]="campoInvalido(secundaria.constanciaEstudios)"
+                />
+
+                <h3 class="seccion__subtitulo">Datos del colegio</h3>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="nombreColegio">Nombre del colegio *</label>
+                    <input
+                      id="nombreColegio"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(secundaria.nombreColegio)"
+                      type="text"
+                      formControlName="nombreColegio"
+                      [attr.aria-invalid]="campoInvalido(secundaria.nombreColegio)"
+                    />
+                    @if (campoInvalido(secundaria.nombreColegio)) {
+                      <p class="campo__error">
+                        {{ mensajeError(secundaria.nombreColegio, 'El nombre del colegio') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="paisColegio">País del colegio *</label>
+                    <app-selector
+                      idControl="paisColegio"
+                      formControlName="paisColegio"
+                      [opciones]="opcionesPaises"
+                      [buscable]="true"
+                      placeholder="Buscar país"
+                      [invalido]="campoInvalido(secundaria.paisColegio)"
+                    />
+                    @if (campoInvalido(secundaria.paisColegio)) {
+                      <p class="campo__error">
+                        {{ mensajeError(secundaria.paisColegio, 'El país del colegio') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="provinciaColegio">Provincia del colegio *</label>
+                    <app-selector
+                      idControl="provinciaColegio"
+                      formControlName="provinciaColegio"
+                      [opciones]="opcionesProvincias"
+                      [buscable]="true"
+                      placeholder="Buscar provincia"
+                      [invalido]="campoInvalido(secundaria.provinciaColegio)"
+                    />
+                    @if (campoInvalido(secundaria.provinciaColegio)) {
+                      <p class="campo__error">
+                        {{ mensajeError(secundaria.provinciaColegio, 'La provincia del colegio') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="ciudadColegio">
+                      Ciudad / Localidad del colegio *
+                    </label>
+                    <input
+                      id="ciudadColegio"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(secundaria.ciudadColegio)"
+                      type="text"
+                      formControlName="ciudadColegio"
+                      [attr.aria-invalid]="campoInvalido(secundaria.ciudadColegio)"
+                    />
+                    @if (campoInvalido(secundaria.ciudadColegio)) {
+                      <p class="campo__error">
+                        {{ mensajeError(secundaria.ciudadColegio, 'La ciudad del colegio') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="cueColegio">CUE del colegio</label>
+                    <input
+                      id="cueColegio"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(secundaria.cueColegio)"
+                      type="text"
+                      inputmode="numeric"
+                      formControlName="cueColegio"
+                      [attr.aria-invalid]="campoInvalido(secundaria.cueColegio)"
+                    />
+                    @if (campoInvalido(secundaria.cueColegio)) {
+                      <p class="campo__error">
+                        {{
+                          mensajeError(
+                            secundaria.cueColegio,
+                            'El CUE del colegio',
+                            'El CUE debe tener entre 6 y 12 dígitos.'
+                          )
+                        }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo campo--accion">
+                    <button
+                      class="boton boton--secundario"
+                      type="button"
+                      (click)="buscarCueColegio()"
+                      [disabled]="buscandoCue()"
+                    >
+                      {{ buscandoCue() ? 'Buscando...' : 'Buscar CUE por padrón' }}
+                    </button>
+                    <p class="campo__ayuda">
+                      Usa institución, país, provincia y ciudad para buscar el código.
+                    </p>
+                  </div>
+                </div>
+
+                @if (mensajeCue(); as mensaje) {
+                  <p class="seccion__mensaje" role="status">{{ mensaje }}</p>
+                }
+
+                @if (resultadosCue().length > 1) {
+                  <ul class="resultados">
+                    @for (establecimiento of resultadosCue(); track establecimiento.cue) {
+                      <li class="resultados__item">
+                        <span>
+                          <strong>{{ establecimiento.nombre }}</strong>
+                          · {{ establecimiento.ciudad }}, {{ establecimiento.provincia }}
+                        </span>
+                        <button class="boton boton--enlace" type="button" (click)="usarCue(establecimiento)">
+                          Usar CUE {{ establecimiento.cue }}
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </section>
+            </div>
+          }
+
+          @if (enPaso('contexto')) {
+            <div class="paso-contenido" data-paso>
+              <!-- ============ Datos laborales ============ -->
+              <section class="tarjeta seccion" id="laborales" formGroupName="laborales">
+                <h2 class="seccion__titulo">Datos laborales</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="situacionLaboral">Situación laboral *</label>
+                    <app-selector
+                      idControl="situacionLaboral"
+                      formControlName="situacion"
+                      [opciones]="situacionesLaborales"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(laborales.situacion)"
+                    />
+                    @if (campoInvalido(laborales.situacion)) {
+                      <p class="campo__error">
+                        {{ mensajeError(laborales.situacion, 'La situación laboral') }}
+                      </p>
+                    }
+                  </div>
+
+                  @if (trabaja()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="empleador">Empresa / empleador *</label>
+                      <input
+                        id="empleador"
+                        class="campo__control"
+                        [class.campo__control--invalido]="campoInvalido(laborales.empleador)"
+                        type="text"
+                        formControlName="empleador"
+                        [attr.aria-invalid]="campoInvalido(laborales.empleador)"
+                      />
+                      @if (campoInvalido(laborales.empleador)) {
+                        <p class="campo__error">{{ mensajeError(laborales.empleador, 'El empleador') }}</p>
+                      }
+                    </div>
+
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="puesto">Puesto o actividad *</label>
+                      <input
+                        id="puesto"
+                        class="campo__control"
+                        [class.campo__control--invalido]="campoInvalido(laborales.puesto)"
+                        type="text"
+                        formControlName="puesto"
+                        [attr.aria-invalid]="campoInvalido(laborales.puesto)"
+                      />
+                      @if (campoInvalido(laborales.puesto)) {
+                        <p class="campo__error">{{ mensajeError(laborales.puesto, 'El puesto') }}</p>
+                      }
+                    </div>
+
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="cargaHoraria">Carga horaria *</label>
+                      <app-selector
+                        idControl="cargaHoraria"
+                        formControlName="cargaHoraria"
+                        [opciones]="cargasHorarias"
+                        placeholder="Seleccione una opción"
+                        [invalido]="campoInvalido(laborales.cargaHoraria)"
+                      />
+                      @if (campoInvalido(laborales.cargaHoraria)) {
+                        <p class="campo__error">
+                          {{ mensajeError(laborales.cargaHoraria, 'La carga horaria') }}
+                        </p>
+                      }
+                    </div>
+                  } @else if (laborales.situacion.value === 'no-trabaja') {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="ocupacion">Ocupación *</label>
+                      <app-selector
+                        idControl="ocupacion"
+                        formControlName="ocupacion"
+                        [opciones]="ocupaciones"
+                        placeholder="Seleccione una opción"
+                        [invalido]="campoInvalido(laborales.ocupacion)"
+                      />
+                      @if (campoInvalido(laborales.ocupacion)) {
+                        <p class="campo__error">{{ mensajeError(laborales.ocupacion, 'La ocupación') }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              </section>
+              <!-- ============ Actividad fisica ============ -->
+              <section class="tarjeta seccion" id="actividad">
+                <h2 class="seccion__titulo">Actividad física</h2>
+
+                <div class="rejilla">
+                  <div class="campo campo--ancho">
+                    <label class="campo__etiqueta" for="actividadFisica">¿Practica algún deporte?</label>
+                    <input
+                      id="actividadFisica"
+                      class="campo__control"
+                      type="text"
+                      placeholder="Por ejemplo: vóley, natación"
+                      formControlName="actividadFisica"
+                    />
+                  </div>
+                </div>
+              </section>
+              <!-- ============ Tecnologia y conectividad ============ -->
+              <section class="tarjeta seccion" id="tecnologia" formGroupName="tecnologia">
+                <h2 class="seccion__titulo">Acceso a tecnología</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="accesoComputadora">
+                      ¿Tiene acceso a computadora? *
+                    </label>
+                    <app-selector
+                      idControl="accesoComputadora"
+                      formControlName="accesoComputadora"
+                      [opciones]="siNo"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(tecnologia.accesoComputadora)"
+                    />
+                    @if (campoInvalido(tecnologia.accesoComputadora)) {
+                      <p class="campo__error">
+                        {{ mensajeError(tecnologia.accesoComputadora, 'Este dato') }}
+                      </p>
+                    }
+                  </div>
+
+                  @if (tieneComputadora()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="lugarComputadora">Desde dónde accede *</label>
+                      <app-selector
+                        idControl="lugarComputadora"
+                        formControlName="lugarComputadora"
+                        [opciones]="lugaresComputadora"
+                        placeholder="Seleccione una opción"
+                        [invalido]="campoInvalido(tecnologia.lugarComputadora)"
+                      />
+                      @if (campoInvalido(tecnologia.lugarComputadora)) {
+                        <p class="campo__error">
+                          {{ mensajeError(tecnologia.lugarComputadora, 'El lugar de acceso') }}
+                        </p>
+                      }
+                    </div>
+                  }
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="celularesEnHogar">
+                      ¿Cuántos celulares hay en su hogar? *
+                    </label>
+                    <input
+                      id="celularesEnHogar"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(tecnologia.celularesEnHogar)"
+                      type="number"
+                      min="0"
+                      max="20"
+                      formControlName="celularesEnHogar"
+                      [attr.aria-invalid]="campoInvalido(tecnologia.celularesEnHogar)"
+                    />
+                    @if (campoInvalido(tecnologia.celularesEnHogar)) {
+                      <p class="campo__error">
+                        {{ mensajeError(tecnologia.celularesEnHogar, 'La cantidad de celulares') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="accesoInternet">¿Tiene acceso a internet? *</label>
+                    <app-selector
+                      idControl="accesoInternet"
+                      formControlName="accesoInternet"
+                      [opciones]="siNo"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(tecnologia.accesoInternet)"
+                    />
+                    @if (campoInvalido(tecnologia.accesoInternet)) {
+                      <p class="campo__error">
+                        {{ mensajeError(tecnologia.accesoInternet, 'Este dato') }}
+                      </p>
+                    }
+                  </div>
+
+                  @if (tieneInternet()) {
+                    <div class="campo">
+                      <label class="campo__etiqueta" for="lugarInternet">
+                        Desde dónde accede a internet *
+                      </label>
+                      <app-selector
+                        idControl="lugarInternet"
+                        formControlName="lugarInternet"
+                        [opciones]="lugaresInternet"
+                        placeholder="Seleccione una opción"
+                        [invalido]="campoInvalido(tecnologia.lugarInternet)"
+                      />
+                      @if (campoInvalido(tecnologia.lugarInternet)) {
+                        <p class="campo__error">
+                          {{ mensajeError(tecnologia.lugarInternet, 'El lugar de acceso') }}
+                        </p>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <fieldset class="opciones" formGroupName="usosInternet">
+                  <legend class="campo__etiqueta">Utiliza internet para</legend>
+
+                  <label class="opcion">
+                    <input type="checkbox" formControlName="estudio" />
+                    <span>Estudio</span>
+                  </label>
+                  <label class="opcion">
+                    <input type="checkbox" formControlName="trabajo" />
+                    <span>Trabajo</span>
+                  </label>
+                  <label class="opcion">
+                    <input type="checkbox" formControlName="tramites" />
+                    <span>Trámites</span>
+                  </label>
+                  <label class="opcion">
+                    <input type="checkbox" formControlName="redesSociales" />
+                    <span>Redes sociales</span>
+                  </label>
+                </fieldset>
+              </section>
+              <!-- ============ Grupo familiar ============ -->
+              <section class="tarjeta seccion" id="familia" formGroupName="familia">
+                <h2 class="seccion__titulo">Grupo familiar</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="hijosACargo">Cantidad de hijos a cargo *</label>
+                    <input
+                      id="hijosACargo"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(familia.hijosACargo)"
+                      type="number"
+                      min="0"
+                      max="20"
+                      formControlName="hijosACargo"
+                      [attr.aria-invalid]="campoInvalido(familia.hijosACargo)"
+                    />
+                    @if (campoInvalido(familia.hijosACargo)) {
+                      <p class="campo__error">
+                        {{ mensajeError(familia.hijosACargo, 'La cantidad de hijos a cargo') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="familiaresACargo">
+                      Cantidad de familiares a cargo (sin incluir hijos) *
+                    </label>
+                    <input
+                      id="familiaresACargo"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(familia.familiaresACargo)"
+                      type="number"
+                      min="0"
+                      max="20"
+                      formControlName="familiaresACargo"
+                      [attr.aria-invalid]="campoInvalido(familia.familiaresACargo)"
+                    />
+                    @if (campoInvalido(familia.familiaresACargo)) {
+                      <p class="campo__error">
+                        {{ mensajeError(familia.familiaresACargo, 'La cantidad de familiares a cargo') }}
+                      </p>
+                    }
+                  </div>
+                </div>
+
+                <h3 class="seccion__subtitulo">Datos del padre</h3>
+                <div class="rejilla" formGroupName="padre">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="padreNombre">Apellido y nombre</label>
+                    <input id="padreNombre" class="campo__control" type="text" formControlName="apellidoNombre" />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="padreNacimiento">Fecha de nacimiento</label>
+                    <input
+                      id="padreNacimiento"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(padre.fechaNacimiento)"
+                      type="date"
+                      formControlName="fechaNacimiento"
+                      [attr.aria-invalid]="campoInvalido(padre.fechaNacimiento)"
+                    />
+                    @if (campoInvalido(padre.fechaNacimiento)) {
+                      <p class="campo__error">{{ mensajeError(padre.fechaNacimiento, 'La fecha') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="padreVive">¿Vive?</label>
+                    <app-selector
+                      idControl="padreVive"
+                      formControlName="vive"
+                      [opciones]="siNo"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="padreEstudios">Nivel de estudios alcanzados</label>
+                    <app-selector
+                      idControl="padreEstudios"
+                      formControlName="nivelEstudios"
+                      [opciones]="nivelesEstudio"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="padreTrabajo">Trabajo / actividad</label>
+                    <input id="padreTrabajo" class="campo__control" type="text" formControlName="trabajo" />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="padreSituacion">Situación laboral</label>
+                    <app-selector
+                      idControl="padreSituacion"
+                      formControlName="situacionLaboral"
+                      [opciones]="situacionesLaboralesFamilia"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="padreObraSocial">Obra social</label>
+                    <input id="padreObraSocial" class="campo__control" type="text" formControlName="obraSocial" />
+                  </div>
+                </div>
+
+                <h3 class="seccion__subtitulo">Datos de la madre</h3>
+                <div class="rejilla" formGroupName="madre">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="madreNombre">Apellido y nombre</label>
+                    <input id="madreNombre" class="campo__control" type="text" formControlName="apellidoNombre" />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="madreNacimiento">Fecha de nacimiento</label>
+                    <input
+                      id="madreNacimiento"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(madre.fechaNacimiento)"
+                      type="date"
+                      formControlName="fechaNacimiento"
+                      [attr.aria-invalid]="campoInvalido(madre.fechaNacimiento)"
+                    />
+                    @if (campoInvalido(madre.fechaNacimiento)) {
+                      <p class="campo__error">{{ mensajeError(madre.fechaNacimiento, 'La fecha') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="madreVive">¿Vive?</label>
+                    <app-selector
+                      idControl="madreVive"
+                      formControlName="vive"
+                      [opciones]="siNo"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="madreEstudios">Nivel de estudios alcanzados</label>
+                    <app-selector
+                      idControl="madreEstudios"
+                      formControlName="nivelEstudios"
+                      [opciones]="nivelesEstudio"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="madreTrabajo">Trabajo / actividad</label>
+                    <input id="madreTrabajo" class="campo__control" type="text" formControlName="trabajo" />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="madreSituacion">Situación laboral</label>
+                    <app-selector
+                      idControl="madreSituacion"
+                      formControlName="situacionLaboral"
+                      [opciones]="situacionesLaboralesFamilia"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="madreObraSocial">Obra social</label>
+                    <input id="madreObraSocial" class="campo__control" type="text" formControlName="obraSocial" />
+                  </div>
+                </div>
+
+                <h3 class="seccion__subtitulo">Hermanos</h3>
+                <div class="rejilla" formGroupName="hermanos">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="hermanosCantidad">Cantidad</label>
+                    <input
+                      id="hermanosCantidad"
+                      class="campo__control"
+                      [class.campo__control--invalido]="campoInvalido(hermanos.cantidad)"
+                      type="number"
+                      min="0"
+                      max="20"
+                      formControlName="cantidad"
+                      [attr.aria-invalid]="campoInvalido(hermanos.cantidad)"
+                    />
+                    @if (campoInvalido(hermanos.cantidad)) {
+                      <p class="campo__error">{{ mensajeError(hermanos.cantidad, 'La cantidad') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="hermanosEdades">Edades</label>
+                    <input
+                      id="hermanosEdades"
+                      class="campo__control"
+                      type="text"
+                      placeholder="Separadas por comas: 12, 15"
+                      formControlName="edades"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="hermanosActividades">Actividades</label>
+                    <input
+                      id="hermanosActividades"
+                      class="campo__control"
+                      type="text"
+                      placeholder="Separadas por comas"
+                      formControlName="actividades"
+                    />
+                  </div>
+                </div>
+              </section>
+              <!-- ============ Vivienda ============ -->
+              <section class="tarjeta seccion" id="vivienda" formGroupName="vivienda">
+                <h2 class="seccion__titulo">Vivienda</h2>
+
+                <div class="rejilla">
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="tipoVivienda">Tipo de vivienda</label>
+                    <app-selector
+                      idControl="tipoVivienda"
+                      formControlName="tipo"
+                      [opciones]="tiposVivienda"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="condicionVivienda">Condición de la vivienda</label>
+                    <app-selector
+                      idControl="condicionVivienda"
+                      formControlName="condicion"
+                      [opciones]="condicionesVivienda"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="traslado">
+                      ¿Cómo se trasladará a su lugar de estudios?
+                    </label>
+                    <app-selector
+                      idControl="traslado"
+                      formControlName="traslado"
+                      [opciones]="mediosTraslado"
+                      placeholder="Sin informar"
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+          }
+
+          @if (enPaso('documentacion')) {
+            <div class="paso-contenido" data-paso>
+              <!-- ============ Documentacion (UNET-CUS2) ============ -->
+              <section class="tarjeta seccion" id="documentacion" formGroupName="documentacion">
+                <h2 class="seccion__titulo">Documentación</h2>
+                <p class="seccion__ayuda">
+                  Formatos admitidos: PDF, JPG y PNG. Hasta 2.0 MB por archivo.
+                </p>
+
+                <div class="documentos">
+                  <app-carga-documento
+                    formControlName="dni"
+                    [requisito]="requisitoDni"
+                    [invalido]="campoInvalido(documentacion.dni)"
+                  />
+                  <app-carga-documento
+                    formControlName="constanciaCuil"
+                    [requisito]="requisitoConstanciaCuil"
+                    [invalido]="campoInvalido(documentacion.constanciaCuil)"
+                  />
+                  <app-carga-documento
+                    formControlName="actaNacimiento"
+                    [requisito]="requisitoActaNacimiento"
+                    [invalido]="campoInvalido(documentacion.actaNacimiento)"
+                  />
+                  <app-carga-documento
+                    formControlName="certificadoAnalitico"
+                    [requisito]="requisitoCertificadoAnalitico"
+                    [invalido]="campoInvalido(documentacion.certificadoAnalitico)"
+                  />
+                </div>
+              </section>
+            </div>
+          }
+
+          @if (enPaso('inscripcion')) {
+            <div class="paso-contenido" data-paso>
+              <!-- ============ Inscripcion ============ -->
+              <section class="tarjeta seccion" id="inscripcion" formGroupName="inscripcion">
+                <h2 class="seccion__titulo">Inscripción</h2>
+
+                <div class="rejilla">
+                  <div class="campo campo--ancho">
+                    <label class="campo__etiqueta" for="carreraId">Carrera *</label>
+                    <app-selector
+                      idControl="carreraId"
+                      formControlName="carreraId"
+                      [opciones]="opcionesCarreras()"
+                      [placeholder]="cargandoCarreras() ? 'Cargando oferta académica...' : 'Seleccione una carrera'"
+                      [invalido]="campoInvalido(datosInscripcion.carreraId)"
+                    />
+                    @if (campoInvalido(datosInscripcion.carreraId)) {
+                      <p class="campo__error">
+                        {{ mensajeError(datosInscripcion.carreraId, 'La carrera') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="modalidad">Modalidad *</label>
+                    <app-selector
+                      idControl="modalidad"
+                      formControlName="modalidad"
+                      [opciones]="modalidadesDisponibles()"
+                      placeholder="Seleccione una opción"
+                      [invalido]="campoInvalido(datosInscripcion.modalidad)"
+                    />
+                    @if (campoInvalido(datosInscripcion.modalidad)) {
+                      <p class="campo__error">
+                        {{ mensajeError(datosInscripcion.modalidad, 'La modalidad') }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="campo">
+                    <label class="campo__etiqueta" for="turno">Turno</label>
+                    <app-selector
+                      idControl="turno"
+                      formControlName="turno"
+                      [opciones]="turnos"
+                      placeholder="Sin preferencia"
+                    />
+                  </div>
+                </div>
+
+                @if (carreraSeleccionada(); as carrera) {
+                  <div class="carrera">
+                    <p class="carrera__nombre">{{ carrera.nombre }}</p>
+                    <p class="carrera__detalle">
+                      Título: {{ carrera.titulo }} · {{ carrera.duracionAnios }} años ·
+                      {{ carrera.sede }}
+                    </p>
+                    <p class="carrera__detalle">Requisito: {{ carrera.requisito }}</p>
+                  </div>
+                }
+              </section>
+              <!-- ============ Declaracion ============ -->
+              <section class="tarjeta seccion" id="declaracion">
+                <h2 class="seccion__titulo">Declaración jurada</h2>
+
+                <label class="opcion opcion--declaracion">
+                  <input
+                    type="checkbox"
+                    formControlName="declaracion"
+                    [attr.aria-invalid]="campoInvalido(declaracion)"
+                  />
+                  <span>
+                    Declaro que los datos consignados son correctos y que la documentación adjunta es
+                    auténtica. *
+                  </span>
+                </label>
+
+                @if (campoInvalido(declaracion)) {
+                  <p class="campo__error">Debe aceptar la declaración para enviar la solicitud.</p>
+                }
+
+                <p class="seccion__ayuda">
+                  Los campos marcados con * son obligatorios. Si algo falta, se lo indicamos sin borrar
+                  lo que ya cargó.
+                </p>
+              </section>
+            </div>
+          }
+
+          <!-- Acciones de la etapa. El envio real ocurre en la ultima. -->
+          <footer class="acciones">
+            <button
+              class="boton boton--suave"
+              type="button"
+              [disabled]="esPrimerPaso() || enviando()"
+              (click)="anterior()"
+            >
+              Anterior
+            </button>
+
+            <p class="acciones__indicador">
+              Paso {{ pasoActual() + 1 }} de {{ pasos.length }}
+            </p>
+
+            @if (esUltimoPaso()) {
+              <button class="boton boton--primario" type="submit" [disabled]="enviando()">
+                {{ enviando() ? 'Enviando solicitud...' : 'Enviar solicitud' }}
+              </button>
+            } @else {
+              <button class="boton boton--primario" type="button" (click)="siguiente()">
+                Continuar
+              </button>
+            }
+          </footer>
+        </form>
+      </main>
+    </div>
+  }
+
+</div>

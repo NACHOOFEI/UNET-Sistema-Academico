@@ -57,3 +57,7 @@
   font-size: var(--texto-sm);
   color: var(--gris-500);
 }
+
+.inicio__tarjeta .boton--secundario {
+  margin-top: var(--esp-5);
+}

@@ -1,0 +1,198 @@
+<div class="landing">
+  <!-- ============ Barra de navegación ============ -->
+  <header class="navbar" data-navbar>
+    <a class="navbar__marca" href="#inicio">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="36" height="36">
+          <path d="M20 3 L35 10 V22 C35 30 28 35 20 37 C12 35 5 30 5 22 V10 Z" fill="currentColor" />
+          <path d="M13 15 V23 a7 7 0 0 0 14 0 V15" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" />
+        </svg>
+      </span>
+      <span class="navbar__nombre">
+        <span class="navbar__sigla">USN</span>
+        <span class="navbar__institucion">Universidad de San Nicolás</span>
+      </span>
+    </a>
+
+    <nav class="navbar__enlaces" aria-label="Secciones del sitio">
+      <a href="#carreras">Carreras</a>
+      <a href="#campus">Campus</a>
+      <a href="#novedades">Novedades</a>
+    </nav>
+
+    <div class="navbar__acciones">
+      <a class="boton boton--texto" routerLink="/inscripcion">Inscribirme</a>
+      <a class="boton boton--acceso" routerLink="/auth">Iniciar sesión</a>
+    </div>
+  </header>
+
+  <!-- ============ Hero ============ -->
+  <section class="hero" id="inicio" data-hero>
+    <img
+      class="hero__imagen"
+      data-hero-imagen
+      [src]="imagenHero()"
+      (load)="alCargarHero()"
+      (error)="usarRespaldoHero()"
+      alt="Campus de la Universidad de San Nicolás"
+    />
+    <div class="hero__velo" aria-hidden="true"></div>
+
+    <div class="hero__contenido" data-hero-texto>
+      <p class="hero__volanta">Ciclo lectivo 2026 · Inscripciones abiertas</p>
+      <h1 class="hero__titulo">Estudiar cerca, proyectarse lejos</h1>
+      <p class="hero__bajada">
+        Seis carreras de grado y pregrado, campus propio y un sistema académico en línea para
+        cursar, inscribirse y seguir tu carrera desde donde estés.
+      </p>
+
+      <div class="hero__acciones">
+        <a class="boton boton--primario" routerLink="/inscripcion">Inscribirme a una carrera</a>
+        <a class="boton boton--contorno" routerLink="/auth">Ingresar al sistema</a>
+      </div>
+    </div>
+
+    <ul class="destacados">
+      @for (dato of destacados; track dato.etiqueta) {
+        <li class="destacado" data-destacado>
+          <p class="destacado__valor">
+            <span [attr.data-numero]="dato.valor">{{ dato.texto }}</span>{{ dato.sufijo }}
+          </p>
+          <p class="destacado__etiqueta">{{ dato.etiqueta }}</p>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- ============ Carreras ============ -->
+  <section class="seccion" id="carreras">
+    <header class="seccion__encabezado" data-revelar>
+      <p class="seccion__volanta">Oferta académica</p>
+      <h2 class="seccion__titulo">Carreras 2026</h2>
+      <p class="seccion__bajada">
+        Planes actualizados, prácticas profesionales desde el segundo año y modalidades que se
+        adaptan a quien trabaja.
+      </p>
+    </header>
+
+    <div class="carreras" data-grupo>
+      @for (carrera of carreras; track carrera.id) {
+        <article class="carrera">
+          <div class="carrera__cabecera">
+            <h3 class="carrera__nombre">{{ carrera.nombre }}</h3>
+            <p class="carrera__titulo">{{ carrera.titulo }}</p>
+          </div>
+
+          <ul class="carrera__datos">
+            <li>{{ duracion(carrera) }}</li>
+            <li>{{ carrera.sede }}</li>
+            @for (modalidad of carrera.modalidades; track modalidad) {
+              <li class="carrera__modalidad">{{ modalidad }}</li>
+            }
+          </ul>
+
+          <p class="carrera__requisito">{{ carrera.requisito }}</p>
+
+          <a class="carrera__enlace" routerLink="/inscripcion">
+            Inscribirme
+            <span class="carrera__flecha" aria-hidden="true"></span>
+          </a>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- ============ Campus ============ -->
+  <section class="seccion campus" id="campus">
+    <div class="campus__texto" data-revelar>
+      <p class="seccion__volanta">El campus</p>
+      <h2 class="seccion__titulo">Un lugar pensado para estudiar</h2>
+      <p class="seccion__bajada">
+        Biblioteca abierta hasta las 22 h, laboratorios equipados, aulas híbridas y espacios de
+        trabajo para proyectos en equipo. Todo a quince minutos del centro de San Nicolás.
+      </p>
+
+      <ul class="campus__lista">
+        <li>Biblioteca central con 40.000 volúmenes</li>
+        <li>Laboratorios de cómputo, redes y datos</li>
+        <li>Aulas híbridas con clases grabadas</li>
+        <li>Comedor universitario y residencia estudiantil</li>
+      </ul>
+    </div>
+
+    <figure class="campus__figura" data-revelar>
+      <img src="assets/imagenes/vida-universitaria.svg" alt="Espacios de estudio del campus" />
+    </figure>
+  </section>
+
+  <!-- ============ Novedades ============ -->
+  <section class="seccion" id="novedades">
+    <header class="seccion__encabezado" data-revelar>
+      <p class="seccion__volanta">Novedades</p>
+      <h2 class="seccion__titulo">Lo que pasa en la universidad</h2>
+    </header>
+
+    <div class="novedades" data-grupo>
+      @for (novedad of novedades; track novedad.id) {
+        <article class="novedad">
+          <div class="novedad__imagen">
+            <img [src]="novedad.imagen" [alt]="novedad.titulo" loading="lazy" />
+            <span class="novedad__etiqueta">{{ novedad.etiqueta }}</span>
+          </div>
+
+          <div class="novedad__cuerpo">
+            <p class="novedad__fecha">{{ novedad.fecha }}</p>
+            <h3 class="novedad__titulo">{{ novedad.titulo }}</h3>
+            <p class="novedad__bajada">{{ novedad.bajada }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- ============ Llamada final ============ -->
+  <section class="llamada" data-revelar>
+    <div class="llamada__texto">
+      <h2 class="llamada__titulo">Las inscripciones 2026 están abiertas</h2>
+      <p class="llamada__bajada">
+        Completá el formulario en línea, adjuntá tu documentación y seguí el estado de tu
+        solicitud. No hace falta tener usuario.
+      </p>
+    </div>
+
+    <div class="llamada__acciones">
+      <a class="boton boton--primario" routerLink="/inscripcion">Comenzar inscripción</a>
+      <a class="boton boton--contorno" routerLink="/auth">Ya soy alumno</a>
+    </div>
+  </section>
+
+  <!-- ============ Pie ============ -->
+  <footer class="pie">
+    <div class="pie__columnas">
+      <div class="pie__marca">
+        <span class="pie__sigla">USN</span>
+        <p class="pie__institucion">Universidad de San Nicolás</p>
+        <p class="pie__direccion">Av. Universidad 1250 · San Nicolás de los Arroyos</p>
+      </div>
+
+      <nav class="pie__grupo" aria-label="Académico">
+        <p class="pie__titulo">Académico</p>
+        <a routerLink="/inscripcion">Inscripción a carreras</a>
+        <a href="#carreras">Oferta académica</a>
+        <a href="#campus">Campus</a>
+      </nav>
+
+      <nav class="pie__grupo" aria-label="Soporte">
+        <p class="pie__titulo">Soporte</p>
+        <a href="mailto:soporte&#64;unet.edu.ar">soporte&#64;unet.edu.ar</a>
+        <a href="tel:+543364000000">(0336) 400-0000</a>
+        <a routerLink="/auth">Acceso al sistema</a>
+      </nav>
+    </div>
+
+    <div class="pie__legal">
+      <p>© 2026 UNET · Sistema de Gestión Académica</p>
+      <p>Mesa de ayuda: lunes a viernes de 8 a 20 h</p>
+    </div>
+  </footer>
+</div>

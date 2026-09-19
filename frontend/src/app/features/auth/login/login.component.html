@@ -36,7 +36,7 @@
 
       <form class="formulario" [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
         <div class="campo">
-          <label class="campo__etiqueta" for="legajo">Legajo</label>
+          <label class="campo__etiqueta" for="legajo">Legajo o correo</label>
           <input
             id="legajo"
             class="campo__control"
@@ -44,7 +44,7 @@
             type="text"
             inputmode="numeric"
             autocomplete="username"
-            placeholder="Ej.: 10001"
+            placeholder="Ej.: 10001 o mferreyra@unet.edu.ar"
             formControlName="legajo"
             [attr.aria-invalid]="campoInvalido(legajo)"
             [attr.aria-describedby]="campoInvalido(legajo) ? 'error-legajo' : null"
@@ -55,7 +55,7 @@
               @if (legajo.hasError('required')) {
                 El legajo es obligatorio.
               } @else if (legajo.hasError('pattern')) {
-                El legajo debe contener solo numeros.
+                Ingrese el legajo (solo numeros) o su correo institucional.
               }
             </p>
           }
@@ -109,6 +109,55 @@
 
       <p class="acceso__ayuda">
         Si no recuerda su legajo o no puede acceder, comuniquese con Bedelia.
+      </p>
+
+      <!--
+        Credenciales de prueba. Existe solo mientras la autenticacion se resuelve
+        contra usuarios.mock.ts; se elimina al integrar el backend.
+      -->
+      <section class="prueba">
+        <button
+          class="boton boton--enlace"
+          type="button"
+          (click)="alternarUsuariosPrueba()"
+          [attr.aria-expanded]="mostrarUsuariosPrueba()"
+        >
+          {{ mostrarUsuariosPrueba() ? 'Ocultar' : 'Ver' }} usuarios de prueba
+        </button>
+
+        @if (mostrarUsuariosPrueba()) {
+          <ul class="prueba__lista">
+            @for (usuario of usuariosPrueba; track usuario.id) {
+              <li class="prueba__item">
+                <div class="prueba__datos">
+                  <p class="prueba__nombre">
+                    {{ usuario.nombre }} {{ usuario.apellido }}
+                    @if (!usuario.activo) {
+                      <span class="prueba__baja">inactivo</span>
+                    }
+                  </p>
+                  <p class="prueba__credencial">
+                    {{ usuario.legajo }} · {{ usuario.password }} · {{ usuario.roles.join(', ') }}
+                  </p>
+                </div>
+
+                <button
+                  class="boton boton--enlace"
+                  type="button"
+                  (click)="usarUsuarioPrueba(usuario)"
+                >
+                  Usar
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- Puerta de entrada para quien todavia no tiene cuenta (UNET-M3-CU10). -->
+      <p class="acceso__ayuda acceso__ayuda--inscripcion">
+        Todavia no es alumno?
+        <a routerLink="/inscripcion">Inscribase a una carrera</a>
       </p>
     </div>
   </main>

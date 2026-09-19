@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { rolPrincipal } from '../../../core/models/usuario.model';
@@ -18,6 +19,7 @@ import { rolPrincipal } from '../../../core/models/usuario.model';
 })
 export class InicioComponent {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly usuario = this.auth.usuario;
 
@@ -44,4 +46,13 @@ export class InicioComponent {
         return 'Portal';
     }
   });
+
+  /**
+   * Sale del sistema. Minimo necesario ahora que la sesion se recuerda en la
+   * pestana; el cierre de sesion completo corresponde a UNET-M1-CU03.
+   */
+  salir(): void {
+    this.auth.cerrarSesion();
+    void this.router.navigateByUrl('/auth');
+  }
 }

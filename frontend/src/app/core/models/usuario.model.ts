@@ -38,12 +38,12 @@ export interface ResultadoLogin {
 export function rutaInicioSegunRol(rol: Rol): string {
   switch (rol) {
     case 'alumno':
-      return '/inicio/alumno';
+      return '/dashboard/alumno';
     case 'docente':
-      return '/inicio/docente';
+      return '/dashboard/docente';
     case 'administrativo':
     case 'administrador':
-      return '/inicio/gestion';
+      return '/dashboard/gestion';
   }
 }
 

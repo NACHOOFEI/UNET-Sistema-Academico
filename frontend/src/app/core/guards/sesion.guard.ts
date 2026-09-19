@@ -12,5 +12,5 @@ export const sesionGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  return auth.estaAutenticado() ? true : router.createUrlTree(['/ingresar']);
+  return auth.estaAutenticado() ? true : router.createUrlTree(['/auth']);
 };

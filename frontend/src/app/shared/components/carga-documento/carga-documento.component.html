@@ -1,0 +1,76 @@
+<div class="documento" [class.documento--invalido]="invalido() && estado() !== 'cargado'">
+  <div class="documento__cabecera">
+    <p class="documento__nombre">
+      {{ requisito().nombre }}
+      @if (requisito().obligatorio) {
+        <span class="documento__marca" aria-hidden="true">*</span>
+        <span class="solo-lectores">obligatorio</span>
+      } @else {
+        <span class="documento__opcional">Opcional</span>
+      }
+    </p>
+    <p class="documento__descripcion">{{ requisito().descripcion }}</p>
+  </div>
+
+  <!-- El input queda siempre en el DOM para que las etiquetas puedan abrirlo. -->
+  <input
+    class="solo-lectores"
+    type="file"
+    [id]="idInput"
+    [accept]="extensionesPermitidas"
+    [disabled]="deshabilitado()"
+    (change)="alSeleccionar($event)"
+  />
+
+  @switch (estado()) {
+    @case ('subiendo') {
+      <p class="documento__estado" role="status">Subiendo archivo...</p>
+    }
+
+    @case ('cargado') {
+      <div class="documento__archivo">
+        <div class="documento__archivo-datos">
+          <span class="documento__archivo-nombre">{{ archivo()?.nombre }}</span>
+          <span class="documento__archivo-peso">
+            {{ formatearTamano(archivo()?.tamano ?? 0) }} · cargado
+          </span>
+        </div>
+
+        <div class="documento__acciones">
+          <label class="boton boton--enlace" [attr.for]="idInput">Reemplazar</label>
+          <button class="boton boton--enlace" type="button" (click)="quitar()">Quitar</button>
+        </div>
+      </div>
+    }
+
+    @default {
+      <label
+        class="zona"
+        [class.zona--activa]="arrastrando()"
+        [attr.for]="idInput"
+        (dragover)="alArrastrar($event)"
+        (dragleave)="alSalirDelArea()"
+        (drop)="alSoltar($event)"
+      >
+        <span class="zona__accion">Seleccionar archivo</span>
+        <span class="zona__ayuda">
+          o arrastrelo aquí · {{ tiposPermitidosTexto }} · hasta {{ tamanoMaximoTexto }}
+        </span>
+      </label>
+    }
+  }
+
+  @if (mensajeError(); as mensaje) {
+    <p class="campo__error" [id]="idError" role="alert">
+      <span>{{ mensaje }}</span>
+    </p>
+
+    @if (permiteReintento()) {
+      <button class="boton boton--enlace" type="button" (click)="reintentar()">
+        Reintentar la carga
+      </button>
+    }
+  } @else if (invalido() && estado() !== 'cargado') {
+    <p class="campo__error" [id]="idError">Debe adjuntar este documento.</p>
+  }
+</div>
