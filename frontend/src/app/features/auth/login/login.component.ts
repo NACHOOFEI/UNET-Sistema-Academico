@@ -3,15 +3,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { USUARIOS_MOCK, UsuarioMock } from '../../../core/mock/usuarios.mock';
 import { MotivoFalloLogin, rolPrincipal, rutaInicioSegunRol } from '../../../core/models/usuario.model';
 
 /**
  * UNET-M1-CU01 - Iniciar sesion.
  *
  * Permite al usuario autenticarse con legajo y contrasena. Valida los campos,
- * verifica credenciales y estado de la cuenta, y redirige al dashboard que
- * corresponde a su rol.
+ * verifica credenciales y estado de la cuenta contra la API, y redirige al
+ * dashboard que corresponde a su rol.
  */
 @Component({
   selector: 'app-login',
@@ -32,17 +31,9 @@ export class LoginComponent {
 
   readonly mostrarPassword = signal(false);
 
-  /** Panel de credenciales de prueba, visible mientras no haya backend. */
-  readonly mostrarUsuariosPrueba = signal(false);
-
-  readonly usuariosPrueba: UsuarioMock[] = USUARIOS_MOCK;
-
   readonly formulario = this.fb.nonNullable.group({
-    // Se admite legajo numerico o correo: el mock acepta los dos.
-    legajo: [
-      '',
-      [Validators.required, Validators.pattern(/^(\d+|[^@\s]+@[^@\s]+\.[^@\s]+)$/)]
-    ],
+    // Solo legajo numerico: la API busca al usuario por legajo (LoginRequestDto).
+    legajo: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
     password: ['', [Validators.required]]
   });
 
@@ -63,16 +54,6 @@ export class LoginComponent {
     this.mostrarPassword.update((visible) => !visible);
   }
 
-  alternarUsuariosPrueba(): void {
-    this.mostrarUsuariosPrueba.update((visible) => !visible);
-  }
-
-  /** Carga en el formulario las credenciales de un usuario de prueba. */
-  usarUsuarioPrueba(usuario: UsuarioMock): void {
-    this.errorIngreso.set(null);
-    this.formulario.setValue({ legajo: usuario.legajo, password: usuario.password });
-  }
-
   enviar(): void {
     this.errorIngreso.set(null);
 
@@ -84,25 +65,17 @@ export class LoginComponent {
 
     this.enviando.set(true);
 
-    this.auth.iniciarSesion(this.formulario.getRawValue()).subscribe({
-      next: (resultado) => {
-        this.enviando.set(false);
+    this.auth.iniciarSesion(this.formulario.getRawValue()).subscribe((resultado) => {
+      this.enviando.set(false);
 
-        if (!resultado.exito || !resultado.usuario) {
-          this.errorIngreso.set(this.mensajeDeFallo(resultado.motivo));
-          this.password.reset();
-          return;
-        }
-
-        const destino = rutaInicioSegunRol(rolPrincipal(resultado.usuario.roles));
-        void this.router.navigateByUrl(destino);
-      },
-      error: () => {
-        this.enviando.set(false);
-        this.errorIngreso.set(
-          'No se pudo conectar con el servidor. Intente nuevamente en unos minutos.'
-        );
+      if (!resultado.exito || !resultado.sesion) {
+        this.errorIngreso.set(this.mensajeDeFallo(resultado.motivo));
+        this.password.reset();
+        return;
       }
+
+      const destino = rutaInicioSegunRol(rolPrincipal(resultado.sesion.usuario.roles));
+      void this.router.navigateByUrl(destino);
     });
   }
 
@@ -111,9 +84,13 @@ export class LoginComponent {
    * indicar si el legajo existe permitiria enumerar usuarios del sistema.
    */
   private mensajeDeFallo(motivo?: MotivoFalloLogin): string {
-    if (motivo === 'usuario-inactivo') {
-      return 'Su cuenta se encuentra inactiva. Comuniquese con la administracion academica.';
+    switch (motivo) {
+      case 'usuario-inactivo':
+        return 'Su cuenta se encuentra inactiva. Comuniquese con la administracion academica.';
+      case 'servicio-no-disponible':
+        return 'No se pudo conectar con el servidor. Intente nuevamente en unos minutos.';
+      default:
+        return 'El legajo o la contrasena son incorrectos.';
     }
-    return 'El legajo o la contrasena son incorrectos.';
   }
 }
