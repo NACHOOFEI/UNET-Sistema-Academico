@@ -1,89 +1,108 @@
-import { Injectable, computed, signal } from '@angular/core';
-import { Observable, delay, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, catchError, map, of } from 'rxjs';
 
-import { Credenciales, ResultadoLogin, Usuario } from '../models/usuario.model';
-import { USUARIOS_MOCK } from '../mock/usuarios.mock';
+import { environment } from '../../../environments/environment';
+import {
+  Credenciales,
+  LoginRequestApi,
+  LoginResultApi,
+  MotivoFalloLogin,
+  ResultadoLogin,
+  Sesion,
+  aUsuario
+} from '../models/usuario.model';
 
 /** Clave con la que se recuerda la sesion mientras dura la pestana. */
 const CLAVE_SESION = 'unet.sesion';
 
 /**
  * Sesion guardada en la pestana. Se usa para que recargar la pagina no expulse
- * al usuario mientras se trabaja sin backend. Devuelve null si no hay nada
- * guardado o si el navegador bloquea el almacenamiento.
+ * al usuario. Devuelve null si no hay nada guardado, si el navegador bloquea el
+ * almacenamiento o si el token ya vencio: un token vencido no sirve para pedir
+ * datos, asi que arrancar con el equivale a no tener sesion.
  */
-function leerSesionGuardada(): Usuario | null {
+function leerSesionGuardada(): Sesion | null {
   try {
     const guardado = sessionStorage.getItem(CLAVE_SESION);
-    return guardado ? (JSON.parse(guardado) as Usuario) : null;
+
+    if (!guardado) {
+      return null;
+    }
+
+    const sesion = JSON.parse(guardado) as Sesion;
+    return sesionVigente(sesion) ? sesion : null;
   } catch {
     return null;
   }
 }
 
+function sesionVigente(sesion: Sesion): boolean {
+  const vence = new Date(sesion.expiracion).getTime();
+  return !Number.isNaN(vence) && vence > Date.now();
+}
+
+/**
+ * Traduce el motivo que informa la API. Un valor que el frontend no conoce se
+ * trata como credenciales invalidas: es el mensaje generico y el mas seguro.
+ */
+function aMotivo(motivo: string | null): MotivoFalloLogin {
+  return motivo === 'usuario-inactivo' ? 'usuario-inactivo' : 'credenciales-invalidas';
+}
+
 /**
  * Servicio de autenticacion - UNET-M1-CU01 (Iniciar sesion).
  *
- * Resuelve la validacion contra datos de prueba locales (usuarios.mock.ts):
- * el frontend funciona completo sin backend. Al integrar la API, solo cambia
- * el cuerpo de iniciarSesion() por la llamada HTTP; la firma y el resto de la
- * aplicacion quedan igual.
+ * Resuelve contra POST /api/auth/login. La API valida las credenciales y
+ * devuelve un JWT junto con el legajo y los roles del usuario (AuthResponseDto).
  *
  * Fuera del alcance de este ticket:
  * - Recuperar contrasena (UNET-M1-CU02)
  * - Cerrar sesion completo (UNET-M1-CU03); aca solo esta cerrarSesion(),
- *   lo minimo para poder salir mientras se prueba con la sesion recordada.
+ *   lo minimo para poder salir mientras dura la sesion recordada.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  /** Latencia simulada para que el estado de carga del formulario sea visible. */
-  private static readonly LATENCIA_SIMULADA_MS = 600;
+  private readonly http = inject(HttpClient);
 
-  private readonly usuarioActual = signal<Usuario | null>(leerSesionGuardada());
+  private readonly sesionActual = signal<Sesion | null>(leerSesionGuardada());
 
   /** Usuario autenticado, o null si no hay sesion iniciada. */
-  readonly usuario = this.usuarioActual.asReadonly();
+  readonly usuario = computed(() => this.sesionActual()?.usuario ?? null);
 
-  readonly estaAutenticado = computed(() => this.usuarioActual() !== null);
+  readonly estaAutenticado = computed(() => this.sesionActual() !== null);
+
+  /** Token de la sesion vigente. Lo usa el interceptor para firmar los pedidos. */
+  token(): string | null {
+    return this.sesionActual()?.token ?? null;
+  }
 
   /**
-   * Valida las credenciales y, si son correctas y el usuario esta activo,
-   * deja la sesion iniciada.
-   *
-   * Se admite legajo o correo como identificador: con datos de prueba es
-   * comun recordar el correo antes que el numero de legajo.
+   * Valida las credenciales contra la API y, si son correctas, deja la sesion
+   * iniciada.
    *
    * Cursos alternativos cubiertos:
-   * - 3.a credenciales incorrectas
-   * - 4.a usuario inactivo
+   * - 3.a credenciales incorrectas (401)
+   * - 4.a usuario inactivo (403)
+   * - servicio no disponible: la API no responde o falla (0, 5xx)
    */
   iniciarSesion(credenciales: Credenciales): Observable<ResultadoLogin> {
-    const identificador = credenciales.legajo.trim().toLowerCase();
+    const cuerpo: LoginRequestApi = {
+      legajo: credenciales.legajo.trim(),
+      password: credenciales.password
+    };
 
-    const encontrado = USUARIOS_MOCK.find(
-      (usuario) =>
-        (usuario.legajo.toLowerCase() === identificador ||
-          usuario.email.toLowerCase() === identificador) &&
-        usuario.password === credenciales.password
-    );
-
-    if (!encontrado) {
-      return this.responder({ exito: false, motivo: 'credenciales-invalidas' });
-    }
-
-    if (!encontrado.activo) {
-      return this.responder({ exito: false, motivo: 'usuario-inactivo' });
-    }
-
-    const { password, ...usuario } = encontrado;
-    this.guardarSesion(usuario);
-
-    return this.responder({ exito: true, usuario });
+    return this.http
+      .post<LoginResultApi>(`${environment.apiUrl}/auth/login`, cuerpo)
+      .pipe(
+        map((respuesta) => this.aResultado(respuesta)),
+        catchError((error: HttpErrorResponse) => of(this.aResultadoDeError(error)))
+      );
   }
 
   /** Termina la sesion y olvida al usuario recordado. */
   cerrarSesion(): void {
-    this.usuarioActual.set(null);
+    this.sesionActual.set(null);
 
     try {
       sessionStorage.removeItem(CLAVE_SESION);
@@ -92,17 +111,50 @@ export class AuthService {
     }
   }
 
-  private guardarSesion(usuario: Usuario): void {
-    this.usuarioActual.set(usuario);
+  private aResultado(respuesta: LoginResultApi): ResultadoLogin {
+    if (!respuesta.exito || !respuesta.auth) {
+      return { exito: false, motivo: aMotivo(respuesta.motivo) };
+    }
+
+    const sesion: Sesion = {
+      usuario: aUsuario(respuesta.auth),
+      token: respuesta.auth.token,
+      expiracion: respuesta.auth.expiracion
+    };
+
+    this.guardarSesion(sesion);
+
+    return { exito: true, sesion };
+  }
+
+  /**
+   * El rechazo tambien llega como error HTTP: 401 para credenciales invalidas y
+   * 403 para usuario inactivo, ambos con el LoginResultDto en el cuerpo.
+   */
+  private aResultadoDeError(error: HttpErrorResponse): ResultadoLogin {
+    if (error.status === 401 || error.status === 403) {
+      const cuerpo = error.error as LoginResultApi | null;
+
+      return {
+        exito: false,
+        motivo: cuerpo?.motivo
+          ? aMotivo(cuerpo.motivo)
+          : error.status === 403
+            ? 'usuario-inactivo'
+            : 'credenciales-invalidas'
+      };
+    }
+
+    return { exito: false, motivo: 'servicio-no-disponible' };
+  }
+
+  private guardarSesion(sesion: Sesion): void {
+    this.sesionActual.set(sesion);
 
     try {
-      sessionStorage.setItem(CLAVE_SESION, JSON.stringify(usuario));
+      sessionStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));
     } catch {
       // La sesion sigue valida en memoria aunque no se pueda recordar.
     }
-  }
-
-  private responder(resultado: ResultadoLogin): Observable<ResultadoLogin> {
-    return of(resultado).pipe(delay(AuthService.LATENCIA_SIMULADA_MS));
   }
 }

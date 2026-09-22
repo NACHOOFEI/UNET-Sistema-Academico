@@ -1,16 +1,12 @@
 <main class="inicio">
   <section class="tarjeta inicio__tarjeta">
     <p class="inicio__volanta">{{ portal() }}</p>
-    <h1 class="inicio__titulo">Bienvenido, {{ nombreCompleto() }}</h1>
+    <h1 class="inicio__titulo">Bienvenido, {{ identificacion() }}</h1>
 
     <dl class="inicio__datos">
       <div class="inicio__dato">
         <dt>Legajo</dt>
         <dd>{{ usuario()?.legajo }}</dd>
-      </div>
-      <div class="inicio__dato">
-        <dt>Correo institucional</dt>
-        <dd>{{ usuario()?.email }}</dd>
       </div>
       <div class="inicio__dato">
         <dt>Rol</dt>

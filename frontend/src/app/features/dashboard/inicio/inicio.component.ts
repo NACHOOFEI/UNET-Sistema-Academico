@@ -23,9 +23,16 @@ export class InicioComponent {
 
   readonly usuario = this.auth.usuario;
 
-  readonly nombreCompleto = computed(() => {
+  /**
+   * Con que identificar al usuario en pantalla.
+   *
+   * La API devuelve legajo y roles, no el nombre: el perfil de la persona
+   * todavia no existe como entidad en el backend. Cuando exista, este saludo
+   * pasa a usarlo.
+   */
+  readonly identificacion = computed(() => {
     const usuario = this.usuario();
-    return usuario ? `${usuario.nombre} ${usuario.apellido}` : '';
+    return usuario ? `legajo ${usuario.legajo}` : '';
   });
 
   readonly rol = computed(() => {
