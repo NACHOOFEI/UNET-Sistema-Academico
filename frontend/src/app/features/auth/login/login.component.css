@@ -141,3 +141,9 @@
     padding: var(--esp-8);
   }
 }
+
+.acceso__ayuda--inscripcion {
+  margin-top: var(--esp-3);
+  padding-top: 0;
+  border-top: none;
+}

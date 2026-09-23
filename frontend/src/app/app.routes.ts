@@ -4,12 +4,30 @@ import { sesionGuard } from './core/guards/sesion.guard';
 
 export const routes: Routes = [
   {
-    path: 'ingresar',
-    title: 'Iniciar sesion | UNET',
+    // Portada institucional publica: punto de entrada del sistema.
+    path: '',
+    pathMatch: 'full',
+    title: 'Universidad de San Nicolas',
+    loadComponent: () =>
+      import('./features/landing/landing.component').then((m) => m.LandingComponent)
+  },
+  {
+    path: 'auth',
+    title: 'Iniciar sesion | USN',
     loadComponent: () =>
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
+    // UNET-M3-CU10: formulario publico, sin guard: lo usa gente sin cuenta.
+    path: 'inscripcion',
+    title: 'Inscripcion a carrera | USN',
+    loadComponent: () =>
+      import('./features/inscripcion/solicitud/solicitud-inscripcion.component').then(
+        (m) => m.SolicitudInscripcionComponent
+      )
+  },
+  {
+    // Destino tras iniciar sesion: los paneles se arman por permisos, no por rol.
     path: 'inicio',
     title: 'Inicio | UNET',
     canActivate: [sesionGuard],
@@ -51,6 +69,7 @@ export const routes: Routes = [
         (m) => m.UsuariosListComponent
       )
   },
-  { path: '', pathMatch: 'full', redirectTo: 'ingresar' },
-  { path: '**', redirectTo: 'ingresar' }
+  // Rutas anteriores, para que los enlaces ya repartidos sigan funcionando.
+  { path: 'ingresar', redirectTo: 'auth' },
+  { path: '**', redirectTo: '' }
 ];

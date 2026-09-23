@@ -1,0 +1,125 @@
+.documento {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-md);
+  background-color: var(--gris-25);
+}
+
+.documento--invalido {
+  border-color: var(--error-600);
+  background-color: var(--error-50);
+}
+
+.documento__cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+}
+
+.documento__nombre {
+  font-size: var(--texto-sm);
+  font-weight: 600;
+  color: var(--gris-800);
+}
+
+.documento__marca {
+  color: var(--error-600);
+}
+
+.documento__opcional {
+  margin-left: var(--esp-2);
+  padding: 0 var(--esp-2);
+  border-radius: var(--radio-sm);
+  background-color: var(--gris-100);
+  font-size: var(--texto-xs);
+  font-weight: 500;
+  color: var(--gris-600);
+}
+
+.documento__descripcion {
+  font-size: var(--texto-xs);
+  color: var(--gris-500);
+}
+
+/* ---------- Zona de carga ---------- */
+.zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: var(--esp-4);
+  border: 1px dashed var(--gris-300);
+  border-radius: var(--radio-md);
+  background-color: var(--gris-0);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transicion), background-color var(--transicion);
+}
+
+.zona:hover,
+.zona--activa {
+  border-color: var(--brand-500);
+  background-color: var(--brand-50);
+}
+
+.zona__accion {
+  font-size: var(--texto-sm);
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.zona__ayuda {
+  font-size: var(--texto-xs);
+  color: var(--gris-500);
+}
+
+/* ---------- Archivo cargado ---------- */
+.documento__estado {
+  font-size: var(--texto-sm);
+  color: var(--gris-600);
+}
+
+.documento__archivo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  border: 1px solid var(--exito-200);
+  border-radius: var(--radio-md);
+  background-color: var(--exito-50);
+}
+
+.documento__archivo-datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.documento__archivo-nombre {
+  overflow: hidden;
+  font-size: var(--texto-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gris-800);
+}
+
+.documento__archivo-peso {
+  font-size: var(--texto-xs);
+  color: var(--exito-700);
+}
+
+.documento__acciones {
+  display: flex;
+  gap: var(--esp-4);
+}
+
+/* La etiqueta que abre el selector se comporta como boton de enlace. */
+.documento__acciones label {
+  cursor: pointer;
+}

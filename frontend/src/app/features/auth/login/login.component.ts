@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { MotivoFalloLogin } from '../../../core/models/usuario.model';
@@ -9,12 +9,12 @@ import { MotivoFalloLogin } from '../../../core/models/usuario.model';
  * UNET-M1-CU01 - Iniciar sesion.
  *
  * Permite al usuario autenticarse con legajo y contrasena. Valida los campos,
- * verifica credenciales y estado de la cuenta, y redirige al dashboard que
- * corresponde a su rol.
+ * verifica credenciales y estado de la cuenta contra la API, y lo lleva a su
+ * pantalla de inicio.
  */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -32,6 +32,7 @@ export class LoginComponent {
   readonly mostrarPassword = signal(false);
 
   readonly formulario = this.fb.nonNullable.group({
+    // Solo legajo numerico: la API busca al usuario por legajo (LoginRequestDto).
     legajo: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
     password: ['', [Validators.required]]
   });
@@ -64,24 +65,16 @@ export class LoginComponent {
 
     this.enviando.set(true);
 
-    this.auth.iniciarSesion(this.formulario.getRawValue()).subscribe({
-      next: (resultado) => {
-        this.enviando.set(false);
+    this.auth.iniciarSesion(this.formulario.getRawValue()).subscribe((resultado) => {
+      this.enviando.set(false);
 
-        if (!resultado.exito || !resultado.usuario) {
-          this.errorIngreso.set(this.mensajeDeFallo(resultado.motivo));
-          this.password.reset();
-          return;
-        }
-
-        void this.router.navigateByUrl('/inicio');
-      },
-      error: () => {
-        this.enviando.set(false);
-        this.errorIngreso.set(
-          'No se pudo conectar con el servidor. Intente nuevamente en unos minutos.'
-        );
+      if (!resultado.exito || !resultado.usuario) {
+        this.errorIngreso.set(this.mensajeDeFallo(resultado.motivo));
+        this.password.reset();
+        return;
       }
+
+      void this.router.navigateByUrl('/inicio');
     });
   }
 
@@ -90,9 +83,13 @@ export class LoginComponent {
    * indicar si el legajo existe permitiria enumerar usuarios del sistema.
    */
   private mensajeDeFallo(motivo?: MotivoFalloLogin): string {
-    if (motivo === 'usuario-inactivo') {
-      return 'Su cuenta se encuentra inactiva. Comuniquese con la administracion academica.';
+    switch (motivo) {
+      case 'usuario-inactivo':
+        return 'Su cuenta se encuentra inactiva. Comuniquese con la administracion academica.';
+      case 'servicio-no-disponible':
+        return 'No se pudo conectar con el servidor. Intente nuevamente en unos minutos.';
+      default:
+        return 'El legajo o la contrasena son incorrectos.';
     }
-    return 'El legajo o la contrasena son incorrectos.';
   }
 }

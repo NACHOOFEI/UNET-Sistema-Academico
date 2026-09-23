@@ -55,7 +55,7 @@
               @if (legajo.hasError('required')) {
                 El legajo es obligatorio.
               } @else if (legajo.hasError('pattern')) {
-                El legajo debe contener solo numeros.
+                El legajo se compone solo de numeros.
               }
             </p>
           }
@@ -109,6 +109,12 @@
 
       <p class="acceso__ayuda">
         Si no recuerda su legajo o no puede acceder, comuniquese con Bedelia.
+      </p>
+
+      <!-- Puerta de entrada para quien todavia no tiene cuenta (UNET-M3-CU10). -->
+      <p class="acceso__ayuda acceso__ayuda--inscripcion">
+        Todavia no es alumno?
+        <a routerLink="/inscripcion">Inscribase a una carrera</a>
       </p>
     </div>
   </main>

@@ -20,10 +20,13 @@ export interface Credenciales {
 
 /**
  * Motivos por los que el inicio de sesion puede fallar.
- * Se distinguen internamente para poder registrar y actuar distinto,
- * aunque al usuario se le muestre un mensaje generico cuando corresponde.
+ * Los dos primeros los informa la API; 'servicio-no-disponible' lo agrega el
+ * frontend cuando no hay respuesta o el backend devuelve un error inesperado.
  */
-export type MotivoFalloLogin = 'credenciales-invalidas' | 'usuario-inactivo';
+export type MotivoFalloLogin =
+  | 'credenciales-invalidas'
+  | 'usuario-inactivo'
+  | 'servicio-no-disponible';
 
 export interface ResultadoLogin {
   exito: boolean;
