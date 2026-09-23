@@ -1,24 +1,44 @@
-<main class="inicio">
-  <section class="tarjeta inicio__tarjeta">
-    <p class="inicio__volanta">{{ portal() }}</p>
-    <h1 class="inicio__titulo">Bienvenido, {{ identificacion() }}</h1>
+<div class="inicio">
+  <aside class="barra">
+    <div class="barra__cabecera">
+      <p class="barra__marca">UNET</p>
+      <p class="barra__rol-etiqueta">Rol</p>
+      <p class="barra__rol">{{ rol() }}</p>
+    </div>
 
-    <dl class="inicio__datos">
-      <div class="inicio__dato">
-        <dt>Legajo</dt>
-        <dd>{{ usuario()?.legajo }}</dd>
-      </div>
-      <div class="inicio__dato">
-        <dt>Rol</dt>
-        <dd>{{ rol() }}</dd>
-      </div>
-    </dl>
+    @if (paneles().length > 0) {
+      <nav class="barra__nav" aria-label="Paneles disponibles">
+        <p class="barra__seccion">Paneles disponibles</p>
+        <ul class="barra__paneles">
+          @for (panel of paneles(); track panel.ruta) {
+            <li>
+              <a class="barra__panel" [routerLink]="panel.ruta">
+                <span class="barra__panel-etiqueta">{{ panel.etiqueta }}</span>
+                <span class="barra__panel-descripcion">{{ panel.descripcion }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+    } @else {
+      <p class="barra__nota">
+        Su usuario no tiene permisos asignados para ningun panel todavia. Comuniquese con
+        administracion.
+      </p>
+    }
 
-    <button class="boton boton--secundario" type="button" (click)="salir()">Cerrar sesion</button>
+    <button class="boton boton--enlace barra__salir" type="button" (click)="cerrarSesion()">
+      Cerrar sesion
+    </button>
+  </aside>
 
-    <p class="inicio__nota">
-      La sesion se inicio correctamente. El contenido de este portal se desarrolla en los
-      modulos de inscripcion, asignaturas y mesas de examen.
-    </p>
-  </section>
-</main>
+  <main class="contenido">
+    <header class="contenido__encabezado">
+      <p class="contenido__volanta">UNET</p>
+      <h1 class="contenido__titulo">Hola, {{ usuario()?.legajo }}</h1>
+      <p class="contenido__texto">
+        Elija un panel del menu lateral para comenzar a trabajar.
+      </p>
+    </header>
+  </main>
+</div>

@@ -51,6 +51,7 @@ public class AuthService : IAuthService
             usuario.Id,
             usuario.Legajo,
             roles,
+            permisos,
             expiracion);
 
         return new LoginResultDto(true, auth, null);

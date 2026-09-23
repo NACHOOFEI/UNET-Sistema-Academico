@@ -1,19 +1,19 @@
 import { Component, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
+import { panelesPara } from '../../../core/navegacion/paneles-disponibles';
 import { AuthService } from '../../../core/services/auth.service';
-import { rolPrincipal } from '../../../core/models/usuario.model';
 
 /**
- * Destino de la redireccion posterior al inicio de sesion (UNET-M1-CU01, paso 5).
+ * Destino unico tras iniciar sesion (UNET-M1-CU01, paso 5).
  *
- * Es una pantalla minima de confirmacion: solo verifica que la sesion quedo
- * iniciada y que el usuario aterrizo en el portal de su rol. El contenido real
- * de cada dashboard corresponde a los modulos M3, M5 y M6.
+ * No decide una ruta segun el nombre del rol: muestra el menu de paneles
+ * habilitados por los permisos del usuario (ver core/navegacion/paneles-disponibles.ts).
+ * Agregar o combinar roles no requiere tocar este componente.
  */
 @Component({
   selector: 'app-inicio',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './inicio.component.html',
   styleUrl: './inicio.component.css'
 })
@@ -23,42 +23,15 @@ export class InicioComponent {
 
   readonly usuario = this.auth.usuario;
 
-  /**
-   * Con que identificar al usuario en pantalla.
-   *
-   * La API devuelve legajo y roles, no el nombre: el perfil de la persona
-   * todavia no existe como entidad en el backend. Cuando exista, este saludo
-   * pasa a usarlo.
-   */
-  readonly identificacion = computed(() => {
-    const usuario = this.usuario();
-    return usuario ? `legajo ${usuario.legajo}` : '';
-  });
+  readonly paneles = computed(() => panelesPara(this.usuario()?.permisos ?? []));
 
+  /** Rol(es) del usuario para mostrar en el encabezado del sidebar. */
   readonly rol = computed(() => {
-    const usuario = this.usuario();
-    return usuario ? rolPrincipal(usuario.roles) : null;
+    const roles = this.usuario()?.roles ?? [];
+    return roles.length > 0 ? roles.join(', ') : 'Sin rol asignado';
   });
 
-  readonly portal = computed(() => {
-    switch (this.rol()) {
-      case 'alumno':
-        return 'Portal del alumno';
-      case 'docente':
-        return 'Portal docente';
-      case 'administrativo':
-      case 'administrador':
-        return 'Portal de gestion';
-      default:
-        return 'Portal';
-    }
-  });
-
-  /**
-   * Sale del sistema. Minimo necesario ahora que la sesion se recuerda en la
-   * pestana; el cierre de sesion completo corresponde a UNET-M1-CU03.
-   */
-  salir(): void {
+  cerrarSesion(): void {
     this.auth.cerrarSesion();
     void this.router.navigateByUrl('/auth');
   }

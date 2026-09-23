@@ -35,6 +35,48 @@ namespace UNET.Migrations
                     b.HasIndex("RolesId");
 
                     b.ToTable("RolPermisosSobreRecurso", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-000000000003"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-000000000009"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000a"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000b"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000d"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000e"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000f"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            PermisosSobreRecursoId = new Guid("6f1a1f2a-0000-4000-8000-000000000010"),
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004")
+                        });
                 });
 
             modelBuilder.Entity("RolUsuario", b =>
@@ -50,6 +92,13 @@ namespace UNET.Migrations
                     b.HasIndex("UsuariosId");
 
                     b.ToTable("UsuarioRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RolesId = new Guid("6f1a1f2a-0000-4000-8000-000000000004"),
+                            UsuariosId = new Guid("6f1a1f2a-0000-4000-8000-000000000005")
+                        });
                 });
 
             modelBuilder.Entity("UNET.Data.Entities.Permiso", b =>
@@ -71,6 +120,28 @@ namespace UNET.Migrations
                         .IsUnique();
 
                     b.ToTable("Permisos");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000002"),
+                            Nombre = "Ver"
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000006"),
+                            Nombre = "Crear"
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000007"),
+                            Nombre = "Editar"
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000008"),
+                            Nombre = "Eliminar"
+                        });
                 });
 
             modelBuilder.Entity("UNET.Data.Entities.PermisoSobreRecurso", b =>
@@ -102,6 +173,105 @@ namespace UNET.Migrations
                     b.HasIndex("RecursoId");
 
                     b.ToTable("PermisosSobreRecurso");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000003"),
+                            Nombre = "ver_roles",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000002"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000009"),
+                            Nombre = "crear_roles",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000006"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-00000000000a"),
+                            Nombre = "editar_roles",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000007"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-00000000000b"),
+                            Nombre = "eliminar_roles",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000008"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-00000000000d"),
+                            Nombre = "ver_usuarios",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000002"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000c")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-00000000000e"),
+                            Nombre = "crear_usuarios",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000006"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000c")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-00000000000f"),
+                            Nombre = "editar_usuarios",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000007"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000c")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000010"),
+                            Nombre = "eliminar_usuarios",
+                            PermisoId = new Guid("6f1a1f2a-0000-4000-8000-000000000008"),
+                            RecursoId = new Guid("6f1a1f2a-0000-4000-8000-00000000000c")
+                        });
+                });
+
+            modelBuilder.Entity("UNET.Data.Entities.Persona", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Apellido")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Apellido", "Nombre");
+
+                    b.ToTable("Personas");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000011"),
+                            Apellido = "UNET",
+                            Eliminado = false,
+                            Nombre = "Administrador"
+                        });
                 });
 
             modelBuilder.Entity("UNET.Data.Entities.Recurso", b =>
@@ -124,6 +294,20 @@ namespace UNET.Migrations
                         .IsUnique();
 
                     b.ToTable("Recursos");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000001"),
+                            Nombre = "Roles",
+                            Tipo = "Entidad"
+                        },
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-00000000000c"),
+                            Nombre = "Usuarios",
+                            Tipo = "Entidad"
+                        });
                 });
 
             modelBuilder.Entity("UNET.Data.Entities.Rol", b =>
@@ -155,6 +339,15 @@ namespace UNET.Migrations
                         .HasFilter("[Eliminado] = 0");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000004"),
+                            Descripcion = "Rol con acceso total al sistema",
+                            Eliminado = false,
+                            Nombre = "Administrador"
+                        });
                 });
 
             modelBuilder.Entity("UNET.Data.Entities.Usuario", b =>
@@ -170,6 +363,9 @@ namespace UNET.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Legajo")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -177,6 +373,12 @@ namespace UNET.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("PersonaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -186,7 +388,22 @@ namespace UNET.Migrations
                     b.HasIndex("Legajo")
                         .IsUnique();
 
+                    b.HasIndex("PersonaId")
+                        .IsUnique()
+                        .HasFilter("[PersonaId] IS NOT NULL");
+
                     b.ToTable("Usuarios");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6f1a1f2a-0000-4000-8000-000000000005"),
+                            Activo = true,
+                            Email = "admin@unet.edu.ar",
+                            Legajo = "0000",
+                            PasswordHash = "$2a$11$PZLTd1lgBc/J9fbWUMAkXOzVu1sVgye9og5ozbsh.h/Xji2k1uhiK",
+                            PersonaId = new Guid("6f1a1f2a-0000-4000-8000-000000000011")
+                        });
                 });
 
             modelBuilder.Entity("PermisoSobreRecursoRol", b =>
@@ -238,9 +455,24 @@ namespace UNET.Migrations
                     b.Navigation("Recurso");
                 });
 
+            modelBuilder.Entity("UNET.Data.Entities.Usuario", b =>
+                {
+                    b.HasOne("UNET.Data.Entities.Persona", "Persona")
+                        .WithOne("Usuario")
+                        .HasForeignKey("UNET.Data.Entities.Usuario", "PersonaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Persona");
+                });
+
             modelBuilder.Entity("UNET.Data.Entities.Permiso", b =>
                 {
                     b.Navigation("PermisosSobreRecurso");
+                });
+
+            modelBuilder.Entity("UNET.Data.Entities.Persona", b =>
+                {
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("UNET.Data.Entities.Recurso", b =>

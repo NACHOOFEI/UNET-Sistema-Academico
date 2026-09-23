@@ -1,0 +1,44 @@
+.roles {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: var(--esp-8) var(--esp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+}
+
+.roles__encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--esp-4);
+}
+
+.roles__volanta {
+  font-size: var(--texto-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.roles__titulo {
+  margin-top: var(--esp-2);
+  font-size: var(--texto-2xl);
+  font-weight: 600;
+  color: var(--gris-900);
+}
+
+.roles__tarjeta {
+  padding: var(--esp-6);
+}
+
+.roles__nota {
+  font-size: var(--texto-sm);
+  color: var(--gris-500);
+}
+
+.tabla__descripcion {
+  color: var(--gris-500);
+  max-width: 24rem;
+}

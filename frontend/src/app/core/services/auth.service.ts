@@ -1,85 +1,37 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import {
-  Credenciales,
-  LoginRequestApi,
-  LoginResultApi,
-  MotivoFalloLogin,
-  ResultadoLogin,
-  Sesion,
-  aUsuario
-} from '../models/usuario.model';
-
-/** Clave con la que se recuerda la sesion mientras dura la pestana. */
-const CLAVE_SESION = 'unet.sesion';
-
-/**
- * Sesion guardada en la pestana. Se usa para que recargar la pagina no expulse
- * al usuario. Devuelve null si no hay nada guardado, si el navegador bloquea el
- * almacenamiento o si el token ya vencio: un token vencido no sirve para pedir
- * datos, asi que arrancar con el equivale a no tener sesion.
- */
-function leerSesionGuardada(): Sesion | null {
-  try {
-    const guardado = sessionStorage.getItem(CLAVE_SESION);
-
-    if (!guardado) {
-      return null;
-    }
-
-    const sesion = JSON.parse(guardado) as Sesion;
-    return sesionVigente(sesion) ? sesion : null;
-  } catch {
-    return null;
-  }
-}
-
-function sesionVigente(sesion: Sesion): boolean {
-  const vence = new Date(sesion.expiracion).getTime();
-  return !Number.isNaN(vence) && vence > Date.now();
-}
-
-/**
- * Traduce el motivo que informa la API. Un valor que el frontend no conoce se
- * trata como credenciales invalidas: es el mensaje generico y el mas seguro.
- */
-function aMotivo(motivo: string | null): MotivoFalloLogin {
-  return motivo === 'usuario-inactivo' ? 'usuario-inactivo' : 'credenciales-invalidas';
-}
+import { LoginResponse, SesionAlmacenada } from '../models/auth.model';
+import { Credenciales, MotivoFalloLogin, ResultadoLogin, Usuario } from '../models/usuario.model';
 
 /**
  * Servicio de autenticacion - UNET-M1-CU01 (Iniciar sesion).
  *
- * Resuelve contra POST /api/auth/login. La API valida las credenciales y
- * devuelve un JWT junto con el legajo y los roles del usuario (AuthResponseDto).
+ * Habla contra el backend real (POST /api/auth/login) y persiste la sesion en
+ * localStorage para que un refresh de pagina no obligue a volver a loguearse.
  *
  * Fuera del alcance de este ticket:
  * - Recuperar contrasena (UNET-M1-CU02)
- * - Cerrar sesion completo (UNET-M1-CU03); aca solo esta cerrarSesion(),
- *   lo minimo para poder salir mientras dura la sesion recordada.
+ * - Cambiar contrasena (UNET-M1-CU04)
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private static readonly CLAVE_SESION = 'unet_sesion';
 
-  private readonly sesionActual = signal<Sesion | null>(leerSesionGuardada());
+  private readonly usuarioActual = signal<Usuario | null>(this.restaurarSesion());
 
   /** Usuario autenticado, o null si no hay sesion iniciada. */
-  readonly usuario = computed(() => this.sesionActual()?.usuario ?? null);
+  readonly usuario = this.usuarioActual.asReadonly();
 
-  readonly estaAutenticado = computed(() => this.sesionActual() !== null);
+  readonly estaAutenticado = computed(() => this.usuarioActual() !== null);
 
-  /** Token de la sesion vigente. Lo usa el interceptor para firmar los pedidos. */
-  token(): string | null {
-    return this.sesionActual()?.token ?? null;
-  }
+  constructor(private readonly http: HttpClient) {}
 
   /**
-   * Valida las credenciales contra la API y, si son correctas, deja la sesion
-   * iniciada.
+   * Valida las credenciales y, si son correctas y el usuario esta activo,
+   * deja la sesion iniciada.
    *
    * Cursos alternativos cubiertos:
    * - 3.a credenciales incorrectas (401)
@@ -87,58 +39,63 @@ export class AuthService {
    * - servicio no disponible: la API no responde o falla (0, 5xx)
    */
   iniciarSesion(credenciales: Credenciales): Observable<ResultadoLogin> {
-    const cuerpo: LoginRequestApi = {
-      legajo: credenciales.legajo.trim(),
-      password: credenciales.password
-    };
+    const legajo = credenciales.legajo.trim();
 
     return this.http
-      .post<LoginResultApi>(`${environment.apiUrl}/auth/login`, cuerpo)
+      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { legajo, password: credenciales.password })
       .pipe(
-        map((respuesta) => this.aResultado(respuesta)),
-        catchError((error: HttpErrorResponse) => of(this.aResultadoDeError(error)))
+        map((respuesta) => this.procesarRespuesta(respuesta)),
+        catchError((error: HttpErrorResponse) => of(this.procesarError(error)))
       );
   }
 
-  /** Termina la sesion y olvida al usuario recordado. */
+  /** Limpia la sesion actual (memoria + localStorage). */
   cerrarSesion(): void {
-    this.sesionActual.set(null);
-
-    try {
-      sessionStorage.removeItem(CLAVE_SESION);
-    } catch {
-      // Sin almacenamiento disponible alcanza con limpiar el estado en memoria.
-    }
+    localStorage.removeItem(AuthService.CLAVE_SESION);
+    this.usuarioActual.set(null);
   }
 
-  private aResultado(respuesta: LoginResultApi): ResultadoLogin {
+  /** Token JWT de la sesion actual, o null si no hay sesion. Lo usa el interceptor HTTP. */
+  obtenerToken(): string | null {
+    return this.leerSesionAlmacenada()?.token ?? null;
+  }
+
+  private procesarRespuesta(respuesta: LoginResponse): ResultadoLogin {
     if (!respuesta.exito || !respuesta.auth) {
-      return { exito: false, motivo: aMotivo(respuesta.motivo) };
+      return { exito: false, motivo: this.aMotivo(respuesta.motivo) };
     }
 
-    const sesion: Sesion = {
-      usuario: aUsuario(respuesta.auth),
+    const sesion: SesionAlmacenada = {
       token: respuesta.auth.token,
+      usuarioId: respuesta.auth.usuarioId,
+      legajo: respuesta.auth.legajo,
+      roles: respuesta.auth.roles,
+      permisos: respuesta.auth.permisos,
       expiracion: respuesta.auth.expiracion
     };
 
-    this.guardarSesion(sesion);
+    localStorage.setItem(AuthService.CLAVE_SESION, JSON.stringify(sesion));
 
-    return { exito: true, sesion };
+    const usuario = this.sesionAUsuario(sesion);
+    this.usuarioActual.set(usuario);
+
+    return { exito: true, usuario };
   }
 
   /**
-   * El rechazo tambien llega como error HTTP: 401 para credenciales invalidas y
-   * 403 para usuario inactivo, ambos con el LoginResultDto en el cuerpo.
+   * El rechazo tambien puede llegar como error HTTP: 401 para credenciales
+   * invalidas y 403 para usuario inactivo, ambos con el LoginResponse en el
+   * cuerpo. Cualquier otra falla (sin respuesta, 5xx) se informa como servicio
+   * no disponible.
    */
-  private aResultadoDeError(error: HttpErrorResponse): ResultadoLogin {
+  private procesarError(error: HttpErrorResponse): ResultadoLogin {
     if (error.status === 401 || error.status === 403) {
-      const cuerpo = error.error as LoginResultApi | null;
+      const cuerpo = error.error as LoginResponse | null;
 
       return {
         exito: false,
         motivo: cuerpo?.motivo
-          ? aMotivo(cuerpo.motivo)
+          ? this.aMotivo(cuerpo.motivo)
           : error.status === 403
             ? 'usuario-inactivo'
             : 'credenciales-invalidas'
@@ -148,13 +105,43 @@ export class AuthService {
     return { exito: false, motivo: 'servicio-no-disponible' };
   }
 
-  private guardarSesion(sesion: Sesion): void {
-    this.sesionActual.set(sesion);
+  /**
+   * Traduce el motivo que informa la API. Un valor que el frontend no conoce se
+   * trata como credenciales invalidas: es el mensaje generico y el mas seguro.
+   */
+  private aMotivo(motivo: string | null): MotivoFalloLogin {
+    return motivo === 'usuario-inactivo' ? 'usuario-inactivo' : 'credenciales-invalidas';
+  }
+
+  private restaurarSesion(): Usuario | null {
+    const sesion = this.leerSesionAlmacenada();
+    if (!sesion) {
+      return null;
+    }
+
+    if (new Date(sesion.expiracion).getTime() <= Date.now()) {
+      localStorage.removeItem(AuthService.CLAVE_SESION);
+      return null;
+    }
+
+    return this.sesionAUsuario(sesion);
+  }
+
+  private leerSesionAlmacenada(): SesionAlmacenada | null {
+    const crudo = localStorage.getItem(AuthService.CLAVE_SESION);
+    if (!crudo) {
+      return null;
+    }
 
     try {
-      sessionStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));
+      return JSON.parse(crudo) as SesionAlmacenada;
     } catch {
-      // La sesion sigue valida en memoria aunque no se pueda recordar.
+      localStorage.removeItem(AuthService.CLAVE_SESION);
+      return null;
     }
+  }
+
+  private sesionAUsuario(sesion: SesionAlmacenada): Usuario {
+    return { id: sesion.usuarioId, legajo: sesion.legajo, roles: sesion.roles, permisos: sesion.permisos };
   }
 }

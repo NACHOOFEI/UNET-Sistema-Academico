@@ -3,14 +3,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { MotivoFalloLogin, rolPrincipal, rutaInicioSegunRol } from '../../../core/models/usuario.model';
+import { MotivoFalloLogin } from '../../../core/models/usuario.model';
 
 /**
  * UNET-M1-CU01 - Iniciar sesion.
  *
  * Permite al usuario autenticarse con legajo y contrasena. Valida los campos,
- * verifica credenciales y estado de la cuenta contra la API, y redirige al
- * dashboard que corresponde a su rol.
+ * verifica credenciales y estado de la cuenta contra la API, y lo lleva a su
+ * pantalla de inicio.
  */
 @Component({
   selector: 'app-login',
@@ -68,14 +68,13 @@ export class LoginComponent {
     this.auth.iniciarSesion(this.formulario.getRawValue()).subscribe((resultado) => {
       this.enviando.set(false);
 
-      if (!resultado.exito || !resultado.sesion) {
+      if (!resultado.exito || !resultado.usuario) {
         this.errorIngreso.set(this.mensajeDeFallo(resultado.motivo));
         this.password.reset();
         return;
       }
 
-      const destino = rutaInicioSegunRol(rolPrincipal(resultado.sesion.usuario.roles));
-      void this.router.navigateByUrl(destino);
+      void this.router.navigateByUrl('/inicio');
     });
   }
 

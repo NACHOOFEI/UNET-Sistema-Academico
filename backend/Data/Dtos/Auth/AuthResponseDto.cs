@@ -5,4 +5,5 @@ public record AuthResponseDto(
     Guid UsuarioId,
     string Legajo,
     List<string> Roles,
+    List<string> Permisos,
     DateTime Expiracion);

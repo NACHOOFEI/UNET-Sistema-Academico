@@ -27,31 +27,49 @@ export const routes: Routes = [
       )
   },
   {
-    path: 'dashboard',
+    // Destino tras iniciar sesion: los paneles se arman por permisos, no por rol.
+    path: 'inicio',
+    title: 'Inicio | UNET',
+    canActivate: [sesionGuard],
+    loadComponent: () =>
+      import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+  },
+  {
+    path: 'accesos/roles',
     canActivate: [sesionGuard],
     children: [
       {
-        path: 'alumno',
-        title: 'Portal del alumno | USN',
+        path: '',
+        title: 'Gestionar roles | UNET',
         loadComponent: () =>
-          import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+          import('./features/accesos/roles/roles-list/roles-list.component').then(
+            (m) => m.RolesListComponent
+          )
       },
       {
-        path: 'docente',
-        title: 'Portal docente | USN',
+        path: 'nuevo',
+        title: 'Nuevo rol | UNET',
         loadComponent: () =>
-          import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+          import('./features/accesos/roles/rol-form/rol-form.component').then((m) => m.RolFormComponent)
       },
       {
-        path: 'gestion',
-        title: 'Portal de gestion | USN',
+        path: ':id/editar',
+        title: 'Editar rol | UNET',
         loadComponent: () =>
-          import('./features/dashboard/inicio/inicio.component').then((m) => m.InicioComponent)
+          import('./features/accesos/roles/rol-form/rol-form.component').then((m) => m.RolFormComponent)
       }
     ]
   },
+  {
+    path: 'accesos/usuarios',
+    title: 'Usuarios | UNET',
+    canActivate: [sesionGuard],
+    loadComponent: () =>
+      import('./features/accesos/usuarios/usuarios-list/usuarios-list.component').then(
+        (m) => m.UsuariosListComponent
+      )
+  },
   // Rutas anteriores, para que los enlaces ya repartidos sigan funcionando.
   { path: 'ingresar', redirectTo: 'auth' },
-  { path: 'inicio', redirectTo: 'dashboard' },
   { path: '**', redirectTo: '' }
 ];

@@ -8,5 +8,11 @@ public class Usuario
     public string PasswordHash { get; set; } = string.Empty;
     public bool Activo { get; set; } = true;
 
+    public Guid? UsuarioModificacionId { get; set; }
+    public DateTime? FechaModificacion { get; set; }
+
+    public Guid? PersonaId { get; set; }
+    public Persona? Persona { get; set; }
+
     public ICollection<Rol> Roles { get; set; } = new List<Rol>();
 }

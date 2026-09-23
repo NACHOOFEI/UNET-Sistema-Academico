@@ -316,3 +316,203 @@ a:hover {
   border-radius: var(--radio-lg);
   box-shadow: var(--sombra-md);
 }
+
+/* ---------- Etiquetas (chips) ---------- */
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--brand-200);
+  border-radius: 999px;
+  background-color: var(--brand-50);
+  font-size: var(--texto-xs);
+  font-weight: 600;
+  color: var(--brand-700);
+  white-space: nowrap;
+}
+
+.etiqueta--apagada {
+  border-color: var(--gris-200);
+  background-color: var(--gris-50);
+  color: var(--gris-500);
+}
+
+.etiqueta--exito {
+  border-color: var(--exito-200);
+  background-color: var(--exito-50);
+  color: var(--exito-700);
+}
+
+/* ---------- Tablas ---------- */
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  text-align: left;
+  padding: var(--esp-3) var(--esp-3);
+  font-size: var(--texto-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gris-500);
+  border-bottom: 1px solid var(--gris-200);
+}
+
+.tabla td {
+  padding: var(--esp-3);
+  border-bottom: 1px solid var(--gris-100);
+  font-size: var(--texto-sm);
+  color: var(--gris-800);
+  vertical-align: top;
+}
+
+.tabla__acciones-columna {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.tabla__acciones {
+  display: flex;
+  gap: var(--esp-4);
+  white-space: nowrap;
+}
+
+.tabla__sin-acciones {
+  color: var(--gris-400);
+}
+
+.tabla__vacio {
+  color: var(--gris-400);
+}
+
+/* ---------- Control segmentado ---------- */
+.segmentado {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 3px;
+  gap: 2px;
+  background-color: var(--gris-100);
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-md);
+}
+
+.segmentado__opcion {
+  padding: 0.35rem 0.85rem;
+  border: none;
+  border-radius: var(--radio-sm);
+  background: transparent;
+  font-size: var(--texto-sm);
+  font-weight: 600;
+  color: var(--gris-500);
+  cursor: pointer;
+  transition: background-color var(--transicion), color var(--transicion),
+              box-shadow var(--transicion);
+}
+
+.segmentado__opcion:hover:not(.segmentado__opcion--activa) {
+  color: var(--gris-700);
+}
+
+.segmentado__opcion--activa {
+  background-color: var(--gris-0);
+  box-shadow: var(--sombra-sm);
+}
+
+/* ---------- Paginador ---------- */
+.paginador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  flex-wrap: wrap;
+}
+
+.paginador__resumen {
+  font-size: var(--texto-sm);
+  color: var(--gris-500);
+}
+
+.paginador__controles {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-4);
+}
+
+.boton--secundario {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--gris-300);
+  background-color: var(--gris-0);
+  font-size: var(--texto-sm);
+  color: var(--gris-700);
+}
+
+.boton--secundario:hover:not(:disabled) {
+  border-color: var(--gris-400);
+  background-color: var(--gris-50);
+}
+
+/* ---------- Botones de peligro ---------- */
+.boton--peligro {
+  color: var(--error-600);
+}
+
+.boton--peligro-solido {
+  background-color: var(--error-600);
+  color: var(--gris-0);
+}
+
+.boton--peligro-solido:hover:not(:disabled) {
+  background-color: var(--error-700);
+}
+
+/* ---------- Modales ---------- */
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--esp-4);
+  background-color: rgba(22, 28, 35, 0.45);
+  z-index: 20;
+}
+
+.modal {
+  width: 100%;
+  max-width: 26rem;
+  padding: var(--esp-6);
+  background-color: var(--gris-0);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.modal__titulo {
+  font-size: var(--texto-lg);
+  font-weight: 600;
+  color: var(--gris-900);
+}
+
+.modal__texto {
+  font-size: var(--texto-sm);
+  color: var(--gris-600);
+}
+
+.modal__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-3);
+}
