@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { LoginResponse, SesionAlmacenada } from '../models/auth.model';
@@ -34,15 +34,19 @@ export class AuthService {
    * deja la sesion iniciada.
    *
    * Cursos alternativos cubiertos:
-   * - 3.a credenciales incorrectas
-   * - 4.a usuario inactivo
+   * - 3.a credenciales incorrectas (401)
+   * - 4.a usuario inactivo (403)
+   * - servicio no disponible: la API no responde o falla (0, 5xx)
    */
   iniciarSesion(credenciales: Credenciales): Observable<ResultadoLogin> {
     const legajo = credenciales.legajo.trim();
 
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { legajo, password: credenciales.password })
-      .pipe(map((respuesta) => this.procesarRespuesta(respuesta)));
+      .pipe(
+        map((respuesta) => this.procesarRespuesta(respuesta)),
+        catchError((error: HttpErrorResponse) => of(this.procesarError(error)))
+      );
   }
 
   /** Limpia la sesion actual (memoria + localStorage). */
@@ -58,7 +62,7 @@ export class AuthService {
 
   private procesarRespuesta(respuesta: LoginResponse): ResultadoLogin {
     if (!respuesta.exito || !respuesta.auth) {
-      return { exito: false, motivo: (respuesta.motivo as MotivoFalloLogin) ?? 'credenciales-invalidas' };
+      return { exito: false, motivo: this.aMotivo(respuesta.motivo) };
     }
 
     const sesion: SesionAlmacenada = {
@@ -76,6 +80,37 @@ export class AuthService {
     this.usuarioActual.set(usuario);
 
     return { exito: true, usuario };
+  }
+
+  /**
+   * El rechazo tambien puede llegar como error HTTP: 401 para credenciales
+   * invalidas y 403 para usuario inactivo, ambos con el LoginResponse en el
+   * cuerpo. Cualquier otra falla (sin respuesta, 5xx) se informa como servicio
+   * no disponible.
+   */
+  private procesarError(error: HttpErrorResponse): ResultadoLogin {
+    if (error.status === 401 || error.status === 403) {
+      const cuerpo = error.error as LoginResponse | null;
+
+      return {
+        exito: false,
+        motivo: cuerpo?.motivo
+          ? this.aMotivo(cuerpo.motivo)
+          : error.status === 403
+            ? 'usuario-inactivo'
+            : 'credenciales-invalidas'
+      };
+    }
+
+    return { exito: false, motivo: 'servicio-no-disponible' };
+  }
+
+  /**
+   * Traduce el motivo que informa la API. Un valor que el frontend no conoce se
+   * trata como credenciales invalidas: es el mensaje generico y el mas seguro.
+   */
+  private aMotivo(motivo: string | null): MotivoFalloLogin {
+    return motivo === 'usuario-inactivo' ? 'usuario-inactivo' : 'credenciales-invalidas';
   }
 
   private restaurarSesion(): Usuario | null {

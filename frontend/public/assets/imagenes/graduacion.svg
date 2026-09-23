@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img">
+  <defs>
+    <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e3a8a"/>
+      <stop offset="0.55" stop-color="#2b4da8"/>
+      <stop offset="1" stop-color="#5b7fd0"/>
+    </linearGradient>
+    <linearGradient id="piso" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f245c"/>
+      <stop offset="1" stop-color="#0a1840"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#cielo)"/>
+  <circle cx="800" cy="330" r="240" fill="#ffffff" opacity="0.07"/>
+  <path d="M800 250 L1080 360 L800 470 L520 360 Z" fill="#f2f6ff"/>
+  <path d="M800 470 L1010 388 v96 q-105 74 -210 74 t-210 -74 v-96 z" fill="#cbdaff" opacity="0.9"/>
+  <rect x="1068" y="356" width="10" height="170" rx="5" fill="#e9f0ff"/>
+  <circle cx="1073" cy="540" r="24" fill="#e9f0ff"/>
+  <path d="M0 720 H1600 V900 H0 Z" fill="url(#piso)"/>
+  <g fill="#122d68">
+    <circle cx="420" cy="690" r="46"/><rect x="374" y="730" width="92" height="120" rx="30"/>
+    <circle cx="800" cy="668" r="50"/><rect x="748" y="712" width="104" height="140" rx="32"/>
+    <circle cx="1180" cy="690" r="46"/><rect x="1134" y="730" width="92" height="120" rx="30"/>
+  </g>
+</svg>

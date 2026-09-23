@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img">
+  <defs>
+    <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e3a8a"/>
+      <stop offset="0.55" stop-color="#2b4da8"/>
+      <stop offset="1" stop-color="#5b7fd0"/>
+    </linearGradient>
+    <linearGradient id="piso" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f245c"/>
+      <stop offset="1" stop-color="#0a1840"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#cielo)"/>
+  <rect x="300" y="240" width="1000" height="420" rx="24" fill="#132c6b" opacity="0.85"/>
+  <rect x="360" y="300" width="30" height="150" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="404" y="310" width="30" height="138" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="448" y="320" width="30" height="126" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="492" y="300" width="30" height="150" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="536" y="310" width="30" height="138" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="580" y="320" width="30" height="126" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="624" y="300" width="30" height="150" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="668" y="310" width="30" height="138" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="712" y="320" width="30" height="126" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="756" y="300" width="30" height="150" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="800" y="310" width="30" height="138" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="844" y="320" width="30" height="126" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="888" y="300" width="30" height="150" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="932" y="310" width="30" height="138" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="976" y="320" width="30" height="126" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="1020" y="300" width="30" height="150" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="1064" y="310" width="30" height="138" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="1108" y="320" width="30" height="126" rx="6" fill="#dbe6ff" opacity="0.9"/>
+  <rect x="340" y="452" width="920" height="16" rx="8" fill="#e9f0ff" opacity="0.8"/>
+  <g transform="translate(0,215)"><rect x="360" y="300" width="30" height="150" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="404" y="310" width="30" height="138" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="448" y="320" width="30" height="126" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="492" y="300" width="30" height="150" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="536" y="310" width="30" height="138" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="580" y="320" width="30" height="126" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="624" y="300" width="30" height="150" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="668" y="310" width="30" height="138" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="712" y="320" width="30" height="126" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="756" y="300" width="30" height="150" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="800" y="310" width="30" height="138" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="844" y="320" width="30" height="126" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="888" y="300" width="30" height="150" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="932" y="310" width="30" height="138" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="976" y="320" width="30" height="126" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="1020" y="300" width="30" height="150" rx="6" fill="#dbe6ff" opacity="0.9"/><rect x="1064" y="310" width="30" height="138" rx="6" fill="#aec5f6" opacity="0.9"/><rect x="1108" y="320" width="30" height="126" rx="6" fill="#dbe6ff" opacity="0.9"/></g>
+  <rect x="340" y="667" width="920" height="16" rx="8" fill="#e9f0ff" opacity="0.8"/>
+  <path d="M0 740 H1600 V900 H0 Z" fill="url(#piso)"/>
+  <rect x="620" y="700" width="360" height="24" rx="12" fill="#cdddff" opacity="0.6"/>
+  <circle cx="800" cy="170" r="96" fill="#ffffff" opacity="0.10"/>
+</svg>

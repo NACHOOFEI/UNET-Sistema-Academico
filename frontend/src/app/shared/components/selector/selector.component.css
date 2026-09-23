@@ -1,0 +1,187 @@
+.selector {
+  position: relative;
+}
+
+/* ---------- Disparador ---------- */
+.selector__disparador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  width: 100%;
+  padding: 0.7rem 0.875rem;
+  border: 1px solid var(--gris-300);
+  border-radius: var(--radio-md);
+  background-color: var(--gris-0);
+  font-size: var(--texto-base);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+
+.selector__disparador:hover:not(:disabled) {
+  border-color: var(--gris-400);
+}
+
+.selector__disparador:focus-visible {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.selector--abierto .selector__disparador {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.selector__disparador:disabled {
+  background-color: var(--gris-100);
+  color: var(--gris-500);
+  cursor: not-allowed;
+}
+
+.selector__disparador--invalido {
+  border-color: var(--error-600);
+}
+
+.selector__disparador--invalido:focus-visible {
+  box-shadow: 0 0 0 3px var(--error-200);
+}
+
+/* Sin eleccion, el texto se lee como marcador de posicion. */
+.selector__disparador--vacio .selector__valor {
+  color: var(--gris-400);
+}
+
+.selector__valor {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selector__flecha {
+  flex: 0 0 auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.15rem;
+  border-right: 2px solid var(--gris-500);
+  border-bottom: 2px solid var(--gris-500);
+  border-radius: 1px;
+  transform: rotate(45deg) translate(-0.1rem, -0.1rem);
+  transition: transform var(--transicion);
+}
+
+.selector--abierto .selector__flecha {
+  transform: rotate(225deg) translate(-0.15rem, -0.15rem);
+}
+
+/* ---------- Panel ---------- */
+.selector__panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--esp-2));
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-md);
+  background-color: var(--gris-0);
+  box-shadow: var(--sombra-lg);
+  animation: selector-aparecer 120ms ease-out;
+}
+
+@keyframes selector-aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selector__panel {
+    animation: none;
+  }
+
+  .selector__flecha {
+    transition: none;
+  }
+}
+
+.selector__busqueda {
+  padding: var(--esp-2);
+  border-bottom: 1px solid var(--gris-200);
+}
+
+.selector__campo {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-sm);
+  background-color: var(--gris-25);
+  font-size: var(--texto-sm);
+}
+
+.selector__campo:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  background-color: var(--gris-0);
+}
+
+/* ---------- Opciones ---------- */
+.selector__lista {
+  max-height: 15rem;
+  margin: 0;
+  padding: var(--esp-1);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.selector__opcion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radio-sm);
+  font-size: var(--texto-sm);
+  color: var(--gris-700);
+  cursor: pointer;
+}
+
+.selector__opcion--resaltada {
+  background-color: var(--brand-50);
+  color: var(--brand-800);
+}
+
+.selector__opcion--elegida {
+  font-weight: 600;
+  color: var(--brand-700);
+}
+
+.selector__etiqueta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tilde de la opcion elegida, dibujado con bordes para no depender de iconos. */
+.selector__tilde {
+  flex: 0 0 auto;
+  width: 0.35rem;
+  height: 0.6rem;
+  margin-right: 0.2rem;
+  border-right: 2px solid var(--brand-600);
+  border-bottom: 2px solid var(--brand-600);
+  transform: rotate(45deg);
+}
+
+.selector__vacio {
+  padding: var(--esp-3);
+  font-size: var(--texto-sm);
+  color: var(--gris-500);
+  text-align: center;
+}

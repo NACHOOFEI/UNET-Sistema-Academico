@@ -33,6 +33,6 @@ export class InicioComponent {
 
   cerrarSesion(): void {
     this.auth.cerrarSesion();
-    void this.router.navigateByUrl('/ingresar');
+    void this.router.navigateByUrl('/auth');
   }
 }
