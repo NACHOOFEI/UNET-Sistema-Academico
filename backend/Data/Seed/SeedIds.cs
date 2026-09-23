@@ -7,6 +7,7 @@ namespace UNET.Data.Seed;
 public static class SeedIds
 {
     public static readonly Guid RecursoRoles = new("6f1a1f2a-0000-4000-8000-000000000001");
+    public static readonly Guid RecursoUsuarios = new("6f1a1f2a-0000-4000-8000-00000000000c");
 
     // Permiso = verbo generico, reutilizable a futuro sobre cualquier Recurso.
     public static readonly Guid PermisoVer = new("6f1a1f2a-0000-4000-8000-000000000002");
@@ -20,6 +21,13 @@ public static class SeedIds
     public static readonly Guid PermisoSobreRecursoEditarRoles = new("6f1a1f2a-0000-4000-8000-00000000000a");
     public static readonly Guid PermisoSobreRecursoEliminarRoles = new("6f1a1f2a-0000-4000-8000-00000000000b");
 
+    // Idem sobre el Recurso "Usuarios".
+    public static readonly Guid PermisoSobreRecursoVerUsuarios = new("6f1a1f2a-0000-4000-8000-00000000000d");
+    public static readonly Guid PermisoSobreRecursoCrearUsuarios = new("6f1a1f2a-0000-4000-8000-00000000000e");
+    public static readonly Guid PermisoSobreRecursoEditarUsuarios = new("6f1a1f2a-0000-4000-8000-00000000000f");
+    public static readonly Guid PermisoSobreRecursoEliminarUsuarios = new("6f1a1f2a-0000-4000-8000-000000000010");
+
     public static readonly Guid RolAdministrador = new("6f1a1f2a-0000-4000-8000-000000000004");
     public static readonly Guid UsuarioAdmin = new("6f1a1f2a-0000-4000-8000-000000000005");
+    public static readonly Guid PersonaAdmin = new("6f1a1f2a-0000-4000-8000-000000000011");
 }

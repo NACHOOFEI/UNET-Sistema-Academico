@@ -43,6 +43,8 @@ try
     builder.Services.AddScoped<IRolService, RolService>();
 
     builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+    builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 

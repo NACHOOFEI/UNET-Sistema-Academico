@@ -1,0 +1,154 @@
+<main class="usuarios">
+  <header class="usuarios__encabezado">
+    <div>
+      <p class="usuarios__volanta">Accesos</p>
+      <h1 class="usuarios__titulo">Usuarios</h1>
+    </div>
+  </header>
+
+  <section class="tarjeta usuarios__panel">
+    <h2 class="usuarios__subtitulo">Busqueda de usuario</h2>
+
+    <div class="usuarios__filtros">
+      <div class="campo usuarios__campo-busqueda">
+        <label class="campo__etiqueta" for="busqueda">Buscar</label>
+        <div class="usuarios__input-con-accion">
+          <input
+            id="busqueda"
+            class="campo__control"
+            type="text"
+            autocomplete="off"
+            placeholder="Legajo, nombre, apellido o email"
+            [value]="textoBusqueda()"
+            (input)="buscar($any($event.target).value)"
+          />
+          @if (hayBusqueda()) {
+            <button
+              class="boton boton--enlace usuarios__limpiar"
+              type="button"
+              (click)="limpiarBusqueda()"
+            >
+              Limpiar
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="campo usuarios__campo-estado">
+        <span class="campo__etiqueta" id="etiqueta-estado">Estado</span>
+        <div class="segmentado" role="radiogroup" aria-labelledby="etiqueta-estado">
+          @for (opcion of estados; track opcion.valor) {
+            <button
+              type="button"
+              class="segmentado__opcion"
+              [class.segmentado__opcion--activa]="estado() === opcion.valor"
+              role="radio"
+              [attr.aria-checked]="estado() === opcion.valor"
+              (click)="cambiarEstado(opcion.valor)"
+            >
+              {{ opcion.etiqueta }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (errorCarga(); as mensaje) {
+    <div class="aviso aviso--error" role="alert">
+      <span class="aviso__marca"></span>
+      <span>{{ mensaje }}</span>
+    </div>
+  }
+
+  <section class="tarjeta usuarios__panel">
+    @if (cargando()) {
+      <p class="usuarios__nota">Cargando usuarios...</p>
+    } @else if (usuarios().length === 0) {
+      <p class="usuarios__nota">
+        @if (hayBusqueda()) {
+          Ningun usuario coincide con la busqueda.
+        } @else {
+          No hay usuarios para el estado seleccionado.
+        }
+      </p>
+    } @else {
+      <div class="tabla-contenedor">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Legajo</th>
+              <th>Nombre y apellido</th>
+              <th>Email</th>
+              @if (muestraEstado()) {
+                <th>Estado</th>
+              }
+              <th>Roles asignados</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (usuario of usuarios(); track usuario.id) {
+              <tr>
+                <td class="usuarios__legajo">{{ usuario.legajo }}</td>
+                <td>
+                  @if (nombreCompleto(usuario); as nombre) {
+                    {{ nombre }}
+                  } @else {
+                    <span class="tabla__vacio" title="El usuario no tiene una persona asociada">-</span>
+                  }
+                </td>
+                <td>{{ usuario.email }}</td>
+                @if (muestraEstado()) {
+                  <td>
+                    <span class="etiqueta" [class.etiqueta--apagada]="!usuario.activo">
+                      {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                }
+                <td>
+                  @if (usuario.roles.length === 0) {
+                    <span class="tabla__vacio">Sin roles asignados</span>
+                  } @else {
+                    <div class="etiquetas">
+                      @for (rol of usuario.roles; track rol) {
+                        <span class="etiqueta">{{ rol }}</span>
+                      }
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="paginador">
+        <p class="paginador__resumen">
+          Mostrando {{ desde() }}-{{ hasta() }} de {{ total() }} usuario{{ total() === 1 ? '' : 's' }}
+        </p>
+
+        @if (totalPaginas() > 1) {
+          <div class="paginador__controles">
+            <button
+              class="boton boton--secundario"
+              type="button"
+              [disabled]="!hayAnterior()"
+              (click)="irAPagina(pagina() - 1)"
+            >
+              Anterior
+            </button>
+            <span class="paginador__resumen">Pagina {{ pagina() }} de {{ totalPaginas() }}</span>
+            <button
+              class="boton boton--secundario"
+              type="button"
+              [disabled]="!haySiguiente()"
+              (click)="irAPagina(pagina() + 1)"
+            >
+              Siguiente
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</main>

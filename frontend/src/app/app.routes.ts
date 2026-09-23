@@ -42,6 +42,15 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'accesos/usuarios',
+    title: 'Usuarios | UNET',
+    canActivate: [sesionGuard],
+    loadComponent: () =>
+      import('./features/accesos/usuarios/usuarios-list/usuarios-list.component').then(
+        (m) => m.UsuariosListComponent
+      )
+  },
   { path: '', pathMatch: 'full', redirectTo: 'ingresar' },
   { path: '**', redirectTo: 'ingresar' }
 ];

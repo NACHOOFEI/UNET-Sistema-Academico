@@ -12,6 +12,12 @@ export const PANELES_DISPONIBLES: Panel[] = [
     etiqueta: 'Gestionar roles',
     descripcion: 'Ver, crear, editar y eliminar los roles del sistema.',
     ruta: '/accesos/roles'
+  },
+  {
+    permiso: 'ver_usuarios',
+    etiqueta: 'Usuarios',
+    descripcion: 'Ver los usuarios del sistema y los roles que tienen asignados.',
+    ruta: '/accesos/usuarios'
   }
 ];
 
